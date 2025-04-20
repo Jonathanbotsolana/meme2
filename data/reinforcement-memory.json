@@ -1,0 +1,487 @@
+{
+  "rejectedTokens": [
+    {
+      "tokenAddress": "FCzioYCxRXWbFAoG1pBmAsWXnEFdLLs5znH2azwjJ2fY",
+      "tokenSymbol": "🧛",
+      "timestamp": 1744847338469,
+      "reasons": [
+        "Score too low: 0.06 < 0.12",
+        "Score too low: 0.07 < 0.12",
+        "Score too low: 0.06 < 0.12",
+        "Score too low: 0.06 < 0.12",
+        "Score too low: 0.06 < 0.12",
+        "Score too low: 0.06 < 0.12",
+        "Score too low: 0.06 < 0.12",
+        "Score too low: 0.06 < 0.12",
+        "Score too low: 0.07 < 0.12",
+        "Score too low: 0.06 < 0.12",
+        "Score too low: 0.07 < 0.12",
+        "Score too low: 0.07 < 0.12"
+      ],
+      "scores": {
+        "volumeScore": 0,
+        "liquidityScore": 0,
+        "priceChangeScore": 0,
+        "sentimentScore": 0,
+        "safetyScore": 0,
+        "totalScore": 0
+      },
+      "initialPrice": 0,
+      "performance": {
+        "1h": null,
+        "4h": null,
+        "24h": null
+      },
+      "wasChecked": {
+        "1h": true,
+        "4h": true,
+        "24h": true
+      }
+    },
+    {
+      "tokenAddress": "F4PP9yepsnELtWBApZX67NGtQk8hwaK7uHXBe9o6MvAd",
+      "tokenSymbol": "AI",
+      "timestamp": 1744854573499,
+      "reasons": [
+        "Score too low: 0.10 < 0.12",
+        "Score too low: 0.10 < 0.12",
+        "Score too low: 0.09 < 0.12",
+        "Score too low: 0.10 < 0.12",
+        "Score too low: 0.10 < 0.12",
+        "Score too low: 0.10 < 0.12",
+        "Score too low: 0.10 < 0.12",
+        "Score too low: 0.10 < 0.12",
+        "Score too low: 0.10 < 0.12",
+        "Score too low: 0.09 < 0.12",
+        "Score too low: 0.09 < 0.12",
+        "Score too low: 0.09 < 0.12",
+        "Score too low: 0.08 < 0.12",
+        "Score too low: 0.09 < 0.12",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)"
+      ],
+      "scores": {
+        "volumeScore": 0,
+        "liquidityScore": 0,
+        "priceChangeScore": 0,
+        "sentimentScore": 0,
+        "safetyScore": 0,
+        "totalScore": 0
+      },
+      "initialPrice": 0,
+      "performance": {
+        "1h": null,
+        "4h": null,
+        "24h": null
+      },
+      "wasChecked": {
+        "1h": true,
+        "4h": true,
+        "24h": true
+      }
+    },
+    {
+      "tokenAddress": "HMx1sy5XQ4GmnLYCJ21Ldnv1A3boGRFHgKzLm52ypump",
+      "tokenSymbol": "TRADER1SZ",
+      "timestamp": 1744904285997,
+      "reasons": [
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Swap simulation failed: Unknown error",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Swap simulation failed: Unknown error"
+      ],
+      "scores": {
+        "volumeScore": 0,
+        "liquidityScore": 0,
+        "priceChangeScore": 0,
+        "sentimentScore": 0,
+        "safetyScore": 0,
+        "totalScore": 0
+      },
+      "initialPrice": 0,
+      "performance": {
+        "1h": null,
+        "4h": null,
+        "24h": null
+      },
+      "wasChecked": {
+        "1h": true,
+        "4h": true,
+        "24h": true
+      }
+    },
+    {
+      "tokenAddress": "AU3muMMYmSAG9th4JVgRRpiU4xPzWyYgBh6sGJRahaiU",
+      "tokenSymbol": "DOG",
+      "timestamp": 1744958226484,
+      "reasons": [
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Insufficient balance",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: Invalid response body while trying to fetch https://cache.jup.ag/markets?v=3: read ECONNRESET",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap execution failed: No Raydium pools found for token AU3muMMYmSAG9th4JVgRRpiU4xPzWyYgBh6sGJRahaiU",
+        "Swap execution failed: No Raydium pools found for token AU3muMMYmSAG9th4JVgRRpiU4xPzWyYgBh6sGJRahaiU",
+        "Not tradable on Jupiter: Error: onChainAnalyzer.getTokenInfo is not a function",
+        "Not tradable on Jupiter: Token does not exist on-chain",
+        "Not tradable: Token does not exist on-chain",
+        "Swap execution failed: Raydium swap failed: Failed to create Raydium swap instruction",
+        "Swap execution failed: Raydium swap failed: Failed to create Raydium swap instruction",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 2: invalid instruction data. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for AU3muMMYmSAG9th4JVgRRpiU4xPzWyYgBh6sGJRahaiU\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399850 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: InvalidInstructionData\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 863 of 1373068 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: invalid instruction data\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Keypair is not defined",
+        "Swap execution failed: Raydium swap failed: Keypair is not defined",
+        "Swap execution failed: Raydium swap failed: Token.createInitializeAccountInstruction is not a function",
+        "Swap execution failed: Raydium swap failed: createInitializeAccountInstruction is not a function",
+        "Swap execution failed: Raydium swap failed: createInitializeAccountInstruction is not a function",
+        "Swap execution failed: Raydium swap failed: createInitializeAccountInstruction is not a function",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 1: insufficient account keys for instruction. \nLogs: \n[\n  \"Program 11111111111111111111111111111111 invoke [1]\",\n  \"Program 11111111111111111111111111111111 success\",\n  \"Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [1]\",\n  \"Program log: Instruction: InitializeAccount\",\n  \"Program log: Error: NotEnoughAccountKeys\",\n  \"Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 1234 of 202850 compute units\",\n  \"Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA failed: insufficient account keys for instruction\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: getAssociatedTokenAddress is not a function",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x1. \nLogs: \n[\n  \"Program 11111111111111111111111111111111 invoke [1]\",\n  \"Transfer: insufficient lamports 1162142, need 12039280\",\n  \"Program 11111111111111111111111111111111 failed: custom program error: 0x1\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: 429 Too Many Requests: {\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32429,\"message\":\"rate limit exceeded\"}}",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: invalid instruction data. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for AU3muMMYmSAG9th4JVgRRpiU4xPzWyYgBh6sGJRahaiU\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: InvalidInstructionData\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 3764 of 1372918 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: invalid instruction data\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: invalid instruction data. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for AU3muMMYmSAG9th4JVgRRpiU4xPzWyYgBh6sGJRahaiU\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: InvalidInstructionData\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 2909 of 1372918 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: invalid instruction data\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: invalid instruction data. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for AU3muMMYmSAG9th4JVgRRpiU4xPzWyYgBh6sGJRahaiU\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: InvalidInstructionData\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 2909 of 1372918 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: invalid instruction data\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for AU3muMMYmSAG9th4JVgRRpiU4xPzWyYgBh6sGJRahaiU\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1372918 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for AU3muMMYmSAG9th4JVgRRpiU4xPzWyYgBh6sGJRahaiU\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1372918 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for AU3muMMYmSAG9th4JVgRRpiU4xPzWyYgBh6sGJRahaiU\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1372918 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details."
+      ],
+      "scores": {
+        "volumeScore": 0,
+        "liquidityScore": 0,
+        "priceChangeScore": 0,
+        "sentimentScore": 0,
+        "safetyScore": 0,
+        "totalScore": 0
+      },
+      "initialPrice": 0,
+      "performance": {
+        "1h": null,
+        "4h": null,
+        "24h": null
+      },
+      "wasChecked": {
+        "1h": true,
+        "4h": true,
+        "24h": true
+      }
+    },
+    {
+      "tokenAddress": "CXc5JcEJkFJUX6Mtrti7BXPUQrgL7oj23D6pUGG3cbeN",
+      "tokenSymbol": "CAT",
+      "timestamp": 1745123449480,
+      "reasons": [
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for CXc5JcEJkFJUX6Mtrti7BXPUQrgL7oj23D6pUGG3cbeN\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1372918 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for CXc5JcEJkFJUX6Mtrti7BXPUQrgL7oj23D6pUGG3cbeN\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1372918 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for CXc5JcEJkFJUX6Mtrti7BXPUQrgL7oj23D6pUGG3cbeN\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1372918 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for CXc5JcEJkFJUX6Mtrti7BXPUQrgL7oj23D6pUGG3cbeN\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1372918 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for CXc5JcEJkFJUX6Mtrti7BXPUQrgL7oj23D6pUGG3cbeN\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1372918 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: insufficient account keys for instruction. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for CXc5JcEJkFJUX6Mtrti7BXPUQrgL7oj23D6pUGG3cbeN\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: NotEnoughAccountKeys\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 4039 of 1372918 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: insufficient account keys for instruction\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for CXc5JcEJkFJUX6Mtrti7BXPUQrgL7oj23D6pUGG3cbeN\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 3102 of 1372918 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for CXc5JcEJkFJUX6Mtrti7BXPUQrgL7oj23D6pUGG3cbeN\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 3102 of 1372918 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 71): \\\"Raydium swap: 0.01 SOL for CXc5JcEJkFJUX6Mtrti7BXPUQrgL7oj23D6pUGG3cbeN\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26782 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 3102 of 1372918 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details."
+      ],
+      "scores": {
+        "volumeScore": 0,
+        "liquidityScore": 0,
+        "priceChangeScore": 0,
+        "sentimentScore": 0,
+        "safetyScore": 0,
+        "totalScore": 0
+      },
+      "initialPrice": 0,
+      "performance": {
+        "1h": null,
+        "4h": null,
+        "24h": null
+      },
+      "wasChecked": {
+        "1h": true,
+        "4h": false,
+        "24h": false
+      }
+    },
+    {
+      "tokenAddress": "LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv",
+      "tokenSymbol": "LOL",
+      "timestamp": 1745123451153,
+      "reasons": [
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1373288 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1373288 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1373288 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1373288 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1373288 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1373288 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1373288 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1373288 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1373288 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1373288 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1373288 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x1b. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 invoke [1]\",\n  \"Program log: Error: The amm account owner is not match with this program\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 consumed 4062 of 1373288 compute units\",\n  \"Program 675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8 failed: custom program error: 0x1b\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 4320 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 4320 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 4320 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 4320 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 4320 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 4320 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 3102 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 3102 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 3102 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 3102 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 3102 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 3102 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 3102 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 3102 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.",
+        "Specialized swap execution failed: Raydium swap failed: Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 3: custom program error: 0x14. \nLogs: \n[\n  \"Program ComputeBudget111111111111111111111111111111 invoke [1]\",\n  \"Program ComputeBudget111111111111111111111111111111 success\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]\",\n  \"Program log: Memo (len 70): \\\"Raydium swap: 0.01 SOL for LoL1RDQiUfifC2BX28xaef6r2G8ES8SEzgrzThJemMv\\\"\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr consumed 26412 of 1399700 compute units\",\n  \"Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr success\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h invoke [1]\",\n  \"Program log: Error: Invalid Sign Account\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h consumed 3102 of 1373288 compute units\",\n  \"Program 5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h failed: custom program error: 0x14\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details."
+      ],
+      "scores": {
+        "volumeScore": 0,
+        "liquidityScore": 0,
+        "priceChangeScore": 0,
+        "sentimentScore": 0,
+        "safetyScore": 0,
+        "totalScore": 0
+      },
+      "initialPrice": 0,
+      "performance": {
+        "1h": null,
+        "4h": null,
+        "24h": null
+      },
+      "wasChecked": {
+        "1h": true,
+        "4h": false,
+        "24h": false
+      }
+    },
+    {
+      "tokenAddress": "BoAQaykj3LtkM2Brevc7cQcRAzpqcsP47nJ2rkyopump",
+      "tokenSymbol": "FOREST",
+      "timestamp": 1745123474735,
+      "reasons": [
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap simulation failed: Unknown error",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap simulation failed: Unknown error",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error"
+      ],
+      "scores": {
+        "volumeScore": 0,
+        "liquidityScore": 0,
+        "priceChangeScore": 0,
+        "sentimentScore": 0,
+        "safetyScore": 0,
+        "totalScore": 0
+      },
+      "initialPrice": 0,
+      "performance": {
+        "1h": null,
+        "4h": null,
+        "24h": null
+      },
+      "wasChecked": {
+        "1h": true,
+        "4h": false,
+        "24h": false
+      }
+    },
+    {
+      "tokenAddress": "A8C3xuqscfmyLrte3VmTqrAq8kgMASius9AFNANwpump",
+      "tokenSymbol": "FWOG",
+      "timestamp": 1745123568755,
+      "reasons": [
+        "Swap execution failed: Jupiter swap failed: Invalid response body while trying to fetch https://cache.jup.ag/markets?v=3: read ECONNRESET",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error"
+      ],
+      "scores": {
+        "volumeScore": 0,
+        "liquidityScore": 0,
+        "priceChangeScore": 0,
+        "sentimentScore": 0,
+        "safetyScore": 0,
+        "totalScore": 0
+      },
+      "initialPrice": 0,
+      "performance": {
+        "1h": null,
+        "4h": null,
+        "24h": null
+      },
+      "wasChecked": {
+        "1h": true,
+        "4h": false,
+        "24h": false
+      }
+    },
+    {
+      "tokenAddress": "3joMReCCSESngJEpFLoKR2dNcChjSRCDtybQet5uSpse",
+      "tokenSymbol": "CAT",
+      "timestamp": 1745123624867,
+      "reasons": [
+        "Swap simulation failed: Unknown error",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap simulation failed: Unknown error",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Swap simulation failed: Unknown error",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)"
+      ],
+      "scores": {
+        "volumeScore": 0,
+        "liquidityScore": 0,
+        "priceChangeScore": 0,
+        "sentimentScore": 0,
+        "safetyScore": 0,
+        "totalScore": 0
+      },
+      "initialPrice": 0,
+      "performance": {
+        "1h": null,
+        "4h": null,
+        "24h": null
+      },
+      "wasChecked": {
+        "1h": true,
+        "4h": false,
+        "24h": false
+      }
+    },
+    {
+      "tokenAddress": "3xvLSHrLcM7246X1vu34cM9gNX741kQrzqj6T2HhLvXp",
+      "tokenSymbol": "COIN",
+      "timestamp": 1745123659150,
+      "reasons": [
+        "Swap simulation failed: Unknown error",
+        "Swap execution failed: No active trading pairs found on DexScreener",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Swap execution failed: No active trading pairs found on DexScreener",
+        "Swap execution failed: No active trading pairs found on DexScreener",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error",
+        "Swap execution failed: No active trading pairs found on DexScreener",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)"
+      ],
+      "scores": {
+        "volumeScore": 0,
+        "liquidityScore": 0,
+        "priceChangeScore": 0,
+        "sentimentScore": 0,
+        "safetyScore": 0,
+        "totalScore": 0
+      },
+      "initialPrice": 0,
+      "performance": {
+        "1h": null,
+        "4h": null,
+        "24h": null
+      },
+      "wasChecked": {
+        "1h": true,
+        "4h": false,
+        "24h": false
+      }
+    },
+    {
+      "tokenAddress": "FAdDY5y9LWFBTY3pBHJwRkKGoeVNMjDjzrBJpiX8gfzE",
+      "tokenSymbol": "FADDY",
+      "timestamp": 1745123704164,
+      "reasons": [
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap simulation failed: Unknown error",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error",
+        "Swap simulation failed: Unknown error"
+      ],
+      "scores": {
+        "volumeScore": 0,
+        "liquidityScore": 0,
+        "priceChangeScore": 0,
+        "sentimentScore": 0,
+        "safetyScore": 0,
+        "totalScore": 0
+      },
+      "initialPrice": 0,
+      "performance": {
+        "1h": null,
+        "4h": null,
+        "24h": null
+      },
+      "wasChecked": {
+        "1h": true,
+        "4h": false,
+        "24h": false
+      }
+    },
+    {
+      "tokenAddress": "6bn6rKWbTRAQwizwqEfcmpAtoAMnqzfG7F8DYMK5reYn",
+      "tokenSymbol": "WOJAK",
+      "timestamp": 1745123728210,
+      "reasons": [
+        "Swap simulation failed: Unknown error",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Swap simulation failed: Unknown error",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Swap execution failed: Jupiter swap failed: No routes found for the input and output mints",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Not tradable: Token not tradable on any supported DEX (Jupiter, Raydium, Orca)",
+        "Swap simulation failed: Unknown error"
+      ],
+      "scores": {
+        "volumeScore": 0,
+        "liquidityScore": 0,
+        "priceChangeScore": 0,
+        "sentimentScore": 0,
+        "safetyScore": 0,
+        "totalScore": 0
+      },
+      "initialPrice": 0,
+      "performance": {
+        "1h": null,
+        "4h": null,
+        "24h": null
+      },
+      "wasChecked": {
+        "1h": true,
+        "4h": false,
+        "24h": false
+      }
+    }
+  ],
+  "missedOpportunities": [],
+  "lastUpdated": 1745133712415
+}
