@@ -1,0 +1,42 @@
+require('dotenv').config();
+
+module.exports = {
+  solana: {
+    rpcUrl: process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
+    walletPrivateKey: process.env.WALLET_PRIVATE_KEY || '',
+    walletKeypairPath: process.env.WALLET_KEYPAIR_PATH || '../meme3/phantom-keypair.json',
+  },
+  trading: {
+    maxTradeSizeSol: parseFloat(process.env.MAX_TRADE_SIZE_SOL || '0.1'),
+    minLiquidityUsd: parseFloat(process.env.MIN_LIQUIDITY_USD || '5000'),
+    minVolumeUsd: parseFloat(process.env.MIN_VOLUME_USD || '10000'),
+    tpPercentage: parseFloat(process.env.TP_PERCENTAGE || '25'),
+    slPercentage: parseFloat(process.env.SL_PERCENTAGE || '10'),
+    defaultSlippage: parseFloat(process.env.DEFAULT_SLIPPAGE || '2.5'),
+  },
+  scanner: {
+    scanInterval: parseInt(process.env.SCAN_INTERVAL || '60000'),
+  },
+  database: {
+    dbPath: process.env.DB_PATH || './data/trades.db',
+  },
+  logging: {
+    level: process.env.LOG_LEVEL || 'info',
+    directory: './logs',
+  },
+  dashboard: {
+    port: parseInt(process.env.DASHBOARD_PORT || '3001'),
+    enabled: process.env.DASHBOARD_ENABLED === 'true',
+  },
+  dexscreener: {
+    baseUrl: 'https://api.dexscreener.com/latest/dex',
+    pairsEndpoint: '/pairs/solana',
+  },
+  tokenScoring: {
+    volumeWeight: 0.3,
+    liquidityWeight: 0.2,
+    priceChangeWeight: 0.3,
+    holdersWeight: 0.2,
+    minScore: 0.7,
+  },
+};
