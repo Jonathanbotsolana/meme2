@@ -1,0 +1,95 @@
+/**
+ * ApeJupiter API Client
+ * 
+ * This module provides a client for interacting with the ApeJupiter API (Ape Pro)
+ * for memecoin trading on Solana.
+ * 
+ * Extended with Raydium and PumpSwap integration for better coverage of DEXes.
+ */
+
+const axios = require('axios');
+const { PublicKey, Transaction, Connection, VersionedTransaction, sendAndConfirmTransaction } = require('@solana/web3.js');
+const bs58 = require('bs58');
+const config = require('../../config/config');
+const logger = require('./logger');
+const wallet = require('./wallet');
+const rpcManager = require('./rpcManager');
+
+// Import Raydium and PumpSwap clients for direct integration
+let raydiumClient;
+let pumpSwapClient;
+
+try {
+  raydiumClient = require('./raydiumDirectClient');
+  // Ensure the client has the required methods
+  if (!raydiumClient.getQuote || typeof raydiumClient.getQuote !== 'function') {
+    raydiumClient.getQuote = async function(params) {
+      logger.info(`Raydium fallback getQuote called with params: ${JSON.stringify(params)}`);
+      // Implement a basic quote function
+      return {
+        success: false,
+        error: 'Raydium quote functionality not fully implemented'
+      };
+    };
+    logger.warn('Added missing getQuote method to Raydium client');
+  }
+  logger.info('Raydium client loaded successfully in ApeJupiterClient');
+} catch (error) {
+  logger.warn(`Failed to load Raydium client in ApeJupiterClient: ${error.message}`);
+}
+
+try {
+  pumpSwapClient = require('./pumpSwapClient');
+  // Ensure the client has the required methods
+  if (!pumpSwapClient.getQuote || typeof pumpSwapClient.getQuote !== 'function') {
+    pumpSwapClient.getQuote = async function(params) {
+      logger.info(`PumpSwap fallback getQuote called with params: ${JSON.stringify(params)}`);
+      // Implement a basic quote function
+      return {
+        success: false,
+        error: 'PumpSwap quote functionality not fully implemented'
+      };
+    };
+    logger.warn('Added missing getQuote method to PumpSwap client');
+  }
+  logger.info('PumpSwap client loaded successfully in ApeJupiterClient');
+} catch (error) {
+  logger.warn(`Failed to load PumpSwap client in ApeJupiterClient: ${error.message}`);
+}
+
+class ApeJupiterClient {
+  constructor() {
+    this.apiBaseUrl = config.trading.apeJupiter.apiBaseUrl;
+    this.apiKey = config.trading.apeJupiter.apiKey;
+    this.useMevProtection = config.trading.apeJupiter.useMevProtection;
+    this.feePercentage = config.trading.apeJupiter.feePercentage;
+    this.maxPriceImpactPct = config.trading.apeJupiter.maxPriceImpactPct;
+    this.defaultSlippage = config.trading.defaultSlippage || 0.05; // 5% default slippage
+    
+    // Initialize RPC manager for connection handling
+    this.rpcManager = rpcManager;
+    this.connection = this.rpcManager.getCurrentConnection();
+    
+    // Configure axios instance with default headers
+    this.api = axios.create({
+      baseURL: this.apiBaseUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.apiKey && { 'Authorization': `Bearer ${this.apiKey}` })
+      },
+      timeout: 30000 // 30 seconds timeout
+    });
+    
+    // Initialize Jupiter rate limiter config if available
+    this.jupiterRateLimiter = config.trading?.jupiter?.rateLimiter || null;
+    
+    // Initialize Raydium and PumpSwap integration flags
+    this.useRaydiumFallback = config.trading?.raydium?.enabled !== false; // Enabled by default
+    this.usePumpSwapFallback = config.trading?.pumpSwap?.enabled !== false; // Enabled by default
+    
+    logger.info(`ApeJupiter client initialized with API URL: ${this.apiBaseUrl}`);
+    logger.info(`MEV protection: ${this.useMevProtection ? 'Enabled' : 'Disabled'}`);
+    logger.info(`Raydium fallback: ${this.useRaydiumFallback ? 'Enabled' : 'Disabled'}`);
+    logger.info(`PumpSwap fallback: ${this.usePumpSwapFallback ? 'Enabled' : 'Disabled'}`);
+  }
+}

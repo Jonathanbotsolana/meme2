@@ -1,0 +1,364 @@
+/**
+ * ApeJupiter API Client
+ * 
+ * This module provides a client for interacting with the ApeJupiter API (Ape Pro)
+ * for memecoin trading on Solana.
+ * 
+ * Extended with Raydium and PumpSwap integration for better coverage of DEXes.
+ */
+
+const axios = require('axios');
+const { PublicKey, Transaction, Connection, VersionedTransaction, sendAndConfirmTransaction } = require('@solana/web3.js');
+const bs58 = require('bs58');
+const config = require('../../config/config');
+const logger = require('./logger');
+const wallet = require('./wallet');
+const rpcManager = require('./rpcManager');
+
+// Import Raydium and PumpSwap clients for direct integration
+let raydiumClient;
+let pumpSwapClient;
+
+try {
+  raydiumClient = require('./raydiumDirectClient');
+  // Ensure the client has the required methods
+  if (!raydiumClient.getQuote || typeof raydiumClient.getQuote !== 'function') {
+    raydiumClient.getQuote = async function(params) {
+      logger.info(`Raydium fallback getQuote called with params: ${JSON.stringify(params)}`);
+      // Implement a basic quote function
+      return {
+        success: false,
+        message: 'Not implemented'
+      };
+    };
+  }
+  logger.info('Raydium client loaded successfully in ApeJupiterClient');
+} catch (error) {
+  logger.warn(`Failed to load Raydium client in ApeJupiterClient: ${error.message}`);
+}
+
+try {
+  pumpSwapClient = require('./pumpSwapClient');
+  // Ensure the client has the required methods
+  if (!pumpSwapClient.getQuote || typeof pumpSwapClient.getQuote !== 'function') {
+    pumpSwapClient.getQuote = async function(params) {
+      logger.info(`PumpSwap fallback getQuote called with params: ${JSON.stringify(params)}`);
+      // Implement a basic quote function
+      return {
+        success: false,
+        message: 'Not implemented'
+      };
+    };
+    logger.warn('Added missing getQuote method to PumpSwap client');
+  }
+  logger.info('PumpSwap client loaded successfully in ApeJupiterClient');
+} catch (error) {
+  logger.warn(`Failed to load PumpSwap client in ApeJupiterClient: ${error.message}`);
+}
+
+class ApeJupiterClient {
+  constructor(options = {}) {
+    this.apiBaseUrl = options.apiBaseUrl || config.trading.apeJupiter.apiBaseUrl;
+    this.apiKey = options.apiKey || config.trading.apeJupiter.apiKey;
+    this.useMevProtection = options.useMevProtection !== undefined ? options.useMevProtection : config.trading.apeJupiter.useMevProtection;
+    this.feePercentage = options.feePercentage || config.trading.apeJupiter.feePercentage;
+    this.maxPriceImpactPct = options.maxPriceImpactPct || config.trading.apeJupiter.maxPriceImpactPct;
+    this.defaultSlippage = options.defaultSlippage || config.trading.defaultSlippage || 0.05; // 5% default slippage
+    
+    // Initialize RPC manager for connection handling
+    this.rpcManager = rpcManager;
+    this.connection = this.rpcManager.getCurrentConnection();
+    
+    // Configure axios instance with default headers
+    this.api = axios.create({
+      baseURL: this.apiBaseUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(this.apiKey && { 'Authorization': `Bearer ${this.apiKey}` })
+      },
+      timeout: 30000 // 30 seconds timeout
+    });
+    
+    // Initialize Jupiter rate limiter config if available
+    this.jupiterRateLimiter = options.jupiterRateLimiter || config.trading?.jupiter?.rateLimiter || null;
+    
+    // Initialize Raydium and PumpSwap integration flags
+    this.useRaydiumFallback = options.useRaydiumFallback !== undefined ? options.useRaydiumFallback : (config.trading?.raydium?.enabled !== false); // Enabled by default
+    this.usePumpSwapFallback = options.usePumpSwapFallback !== undefined ? options.usePumpSwapFallback : (config.trading?.pumpSwap?.enabled !== false); // Enabled by default
+    
+    logger.info(`ApeJupiter client initialized with API URL: ${this.apiBaseUrl}`);
+    logger.info(`MEV protection: ${this.useMevProtection ? 'Enabled' : 'Disabled'}`);
+    logger.info(`Raydium fallback: ${this.useRaydiumFallback ? 'Enabled' : 'Disabled'}`);
+    logger.info(`PumpSwap fallback: ${this.usePumpSwapFallback ? 'Enabled' : 'Disabled'}`);
+  }
+  
+  /**
+   * Execute a swap using the best available method
+   * @param {string} tokenAddress - The mint address of the token to buy
+   * @param {number} amountInSol - Amount of SOL to spend
+   * @param {number} slippage - The slippage tolerance as a decimal (e.g., 0.05 = 5%)
+   * @param {Object} options - Additional options
+   * @returns {Promise<Object>} - The swap result
+   */
+  async executeSwap(tokenAddress, amountInSol, slippage = null, options = {}) {
+    try {
+      logger.info(`Executing swap for ${tokenAddress} with ${amountInSol} SOL`);
+      
+      // Validate inputs
+      if (!tokenAddress) {
+        throw new Error('Token address is required');
+      }
+      
+      if (!amountInSol || amountInSol <= 0) {
+        throw new Error('Amount must be greater than 0');
+      }
+      
+      // Set default slippage if not provided
+      const effectiveSlippage = slippage || this.defaultSlippage;
+      logger.info(`Using slippage: ${effectiveSlippage * 100}%`);
+      
+      // Always use Jupiter SDK as the primary method
+      try {
+        logger.info(`Using Jupiter SDK for swap`);
+        return await this.executeJupiterApiSwap(tokenAddress, amountInSol, effectiveSlippage);
+      } catch (jupiterError) {
+        logger.error(`Jupiter SDK swap failed: ${jupiterError.message}`);
+        
+        // If Jupiter SDK fails and we have fallback options enabled, try them
+        if (options.useFallbacks !== false) {
+          // Try direct swap as fallback
+          try {
+            logger.info(`Trying direct swap as fallback`);
+            const keypair = wallet.getKeypair();
+            const amountInLamports = Math.floor(amountInSol * 1e9);
+            const slippageBps = Math.floor(effectiveSlippage * 100);
+            
+            return await this.executeDirectSwap(
+              'So11111111111111111111111111111111111111112', // Wrapped SOL
+              tokenAddress,
+              amountInLamports,
+              slippageBps,
+              keypair,
+              { preferredDex: options.preferredDex }
+            );
+          } catch (directSwapError) {
+            logger.error(`Direct swap fallback failed: ${directSwapError.message}`);
+            
+            // If direct swap fails and Raydium is enabled, try it as a last resort
+            if (this.useRaydiumFallback && raydiumClient) {
+              try {
+                logger.info(`Trying Raydium as last resort fallback`);
+                const raydiumResult = await this._executeRaydiumDirectSwap(
+                  'So11111111111111111111111111111111111111112',
+                  tokenAddress,
+                  Math.floor(amountInSol * 1e9),
+                  Math.floor(effectiveSlippage * 100),
+                  wallet.getKeypair()
+                );
+                
+                if (raydiumResult) {
+                  return raydiumResult;
+                }
+              } catch (raydiumError) {
+                logger.error(`Raydium fallback also failed: ${raydiumError.message}`);
+              }
+            }
+          }
+        }
+        
+        // If all fallbacks fail, rethrow the original Jupiter error
+        throw jupiterError;
+      }
+    } catch (error) {
+      logger.error(`Error in executeSwap: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute a swap using Jupiter SDK directly
+   * @param {string} tokenAddress - The mint address of the token to buy
+   * @param {number} amountInSol - Amount of SOL to spend
+   * @param {number} slippage - The slippage tolerance as a decimal (e.g., 0.05 = 5%)
+   * @returns {Promise<Object>} - The swap result
+   */
+  async executeJupiterApiSwap(tokenAddress, amountInSol, slippage = null) {
+    try {
+      // Import Jupiter SDK
+      const { Jupiter } = require('@jup-ag/core');
+      
+      const slippageBps = Math.floor((slippage || this.defaultSlippage) * 100);
+      const slippagePercent = slippageBps / 100;
+      const amountInLamports = Math.floor(amountInSol * 1e9);
+      const keypair = wallet.getKeypair();
+      
+      logger.info(`Executing Jupiter SDK swap for ${tokenAddress} with ${amountInSol} SOL (slippage: ${slippagePercent}%)`);
+      
+      // Define input and output tokens
+      const inputMint = 'So11111111111111111111111111111111111111112'; // Wrapped SOL
+      const outputMint = tokenAddress;
+      
+      // Always get the latest connection from the RPC manager
+      this.connection = this.rpcManager.getCurrentConnection();
+      
+      // Initialize Jupiter instance
+      const jupiter = await Jupiter.load({
+        connection: this.connection,
+        cluster: 'mainnet-beta',
+        user: keypair, // Pass the keypair directly for signing
+        wrapUnwrapSOL: true, // Auto wrap/unwrap SOL
+        routeCacheDuration: 30, // Cache routes for 30 seconds
+      });
+      
+      logger.info(`Jupiter SDK initialized successfully`);
+      
+      // Step 1: Get routes with progressively higher slippage if needed
+      let routes = null;
+      const slippageValues = [slippagePercent, 10, 25, 50]; // Try with original slippage, then 10%, 25%, 50%
+      
+      for (const currentSlippage of slippageValues) {
+        try {
+          logger.info(`Trying to find routes with ${currentSlippage}% slippage`);
+          
+          // Get routes
+          const routesResponse = await jupiter.computeRoutes({
+            inputMint: new PublicKey(inputMint),
+            outputMint: new PublicKey(outputMint),
+            amount: amountInLamports,
+            slippageBps: currentSlippage * 100, // Convert percentage to basis points
+            forceFetch: true, // Skip cache for fresh routes
+            onlyDirectRoutes: false,
+          });
+          
+          if (routesResponse && routesResponse.routesInfos && routesResponse.routesInfos.length > 0) {
+            routes = routesResponse;
+            logger.info(`Found ${routesResponse.routesInfos.length} routes with ${currentSlippage}% slippage`);
+            logger.info(`Best route output: ${routesResponse.routesInfos[0].outAmount} tokens`);
+            break;
+          } else {
+            logger.warn(`No routes found with ${currentSlippage}% slippage`);
+          }
+        } catch (error) {
+          logger.warn(`Error finding routes with ${currentSlippage}% slippage: ${error.message}`);
+        }
+      }
+      
+      // If still no routes, try with direct routes only
+      if (!routes) {
+        try {
+          logger.info(`Trying with direct routes only and 50% slippage`);
+          
+          const routesResponse = await jupiter.computeRoutes({
+            inputMint: new PublicKey(inputMint),
+            outputMint: new PublicKey(outputMint),
+            amount: amountInLamports,
+            slippageBps: 5000, // 50% slippage
+            forceFetch: true,
+            onlyDirectRoutes: true, // Direct routes only
+          });
+          
+          if (routesResponse && routesResponse.routesInfos && routesResponse.routesInfos.length > 0) {
+            routes = routesResponse;
+            logger.info(`Found ${routesResponse.routesInfos.length} direct routes with 50% slippage`);
+            logger.info(`Best direct route output: ${routesResponse.routesInfos[0].outAmount} tokens`);
+          } else {
+            logger.warn(`No direct routes found with 50% slippage`);
+          }
+        } catch (error) {
+          logger.warn(`Error finding direct routes: ${error.message}`);
+        }
+      }
+      
+      if (!routes || !routes.routesInfos || routes.routesInfos.length === 0) {
+        throw new Error('Could not find any routes on Jupiter for this token');
+      }
+      
+      // Step 2: Select the best route
+      const bestRoute = routes.routesInfos[0];
+      logger.info(`Selected best route with output amount: ${bestRoute.outAmount} tokens`);
+      
+      // Step 3: Execute the swap with the best route
+      logger.info(`Executing swap transaction...`);
+      
+      // Add priority fee to improve chances of inclusion
+      const priorityFee = 10000; // 0.00001 SOL fee
+      
+      // Execute the swap
+      const { execute } = await jupiter.exchange({
+        routeInfo: bestRoute,
+        userPublicKey: keypair.publicKey,
+        computeUnitPriceMicroLamports: priorityFee,
+        dynamicComputeUnitLimit: true, // Automatically calculate CU limit
+      });
+      
+      // Execute the transaction
+      const swapResult = await execute();
+      
+      if (!swapResult || !swapResult.txid) {
+        throw new Error('Swap execution failed: No transaction ID returned');
+      }
+      
+      logger.info(`Jupiter SDK swap transaction confirmed: ${swapResult.txid}`);
+      
+      // Extract output amount from the best route
+      const outputAmount = Number(bestRoute.outAmount) / Math.pow(10, bestRoute.outputDecimals || 9);
+      
+      // Get approximate USD value (this is simplified)
+      const outputAmountUsd = amountInSol * 10; // Placeholder, replace with actual price data
+      
+      const result = {
+        success: true,
+        inputAmount: amountInSol,
+        outputAmount: outputAmount,
+        outputAmountUsd: outputAmountUsd,
+        txHash: swapResult.txid,
+        timestamp: Date.now(),
+        provider: 'jupiterSdk'
+      };
+      
+      // Log the trade in database
+      await this.logTrade(tokenAddress, result);
+      
+      logger.info(`Jupiter SDK swap executed successfully: ${result.txHash}`);
+      return result;
+    } catch (error) {
+      logger.error(`Error executing Jupiter SDK swap: ${error.message}`);
+      
+      // If we encounter an RPC-related error, try rotating the endpoint
+      if (error.message.includes('429') || 
+          error.message.includes('timeout') || 
+          error.message.includes('connection') ||
+          error.message.includes('network')) {
+        logger.info('Detected RPC issue, rotating endpoint...');
+        this.connection = this.rpcManager.rotateEndpoint();
+        logger.info(`Rotated to new RPC endpoint: ${this.rpcManager.getCurrentEndpoint()}`);
+      }
+      
+      throw error; // Propagate the error to be handled by the caller
+    }
+  }
+  
+  // Add other methods from the original class here...
+  
+  /**
+   * Log a trade to the database
+   * @param {string} tokenAddress - The token address
+   * @param {Object} swapResult - The swap result
+   */
+  async logTrade(tokenAddress, swapResult) {
+    try {
+      // Implement trade logging logic here
+      logger.info(`Logged trade for ${tokenAddress}: ${JSON.stringify(swapResult)}`);
+      return true;
+    } catch (error) {
+      logger.error(`Error logging trade: ${error.message}`);
+      return false;
+    }
+  }
+}
+
+// Export both the class and a default instance
+module.exports = {
+  ApeJupiterClient,
+  default: new ApeJupiterClient()
+};

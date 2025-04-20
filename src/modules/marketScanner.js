@@ -1,0 +1,982 @@
+const axios = require('axios');
+const config = require('../../config/config');
+const logger = require('../utils/logger');
+const database = require('../utils/database');
+
+// Enhanced rate limiting helper with adaptive throttling and improved error handling
+const rateLimitedAxios = {
+  queue: [],
+  processing: false,
+  lastRequestTime: 0,
+  minRequestInterval: config.dexscreener?.apiSettings?.minRequestInterval || 1000, // Increased default to 1000ms
+  maxConcurrentRequests: config.dexscreener?.apiSettings?.maxConcurrentRequests || 2, // Reduced to 2
+  activeRequests: 0,
+  requestHistory: [], // Track recent requests for adaptive throttling
+  responseTimeHistory: [], // Track response times for adaptive throttling
+  cache: new Map(), // Simple cache for responses
+  cacheExpiration: config.dexscreener?.apiSettings?.cacheExpirationMs || 60000, // Increased to 60 seconds
+  
+  async request(config) {
+    try {
+      // Check cache first if caching is enabled
+      if (config.dexscreener?.apiSettings?.cacheResponses !== false) {
+        const cacheKey = `${config.method || 'get'}-${config.url}-${JSON.stringify(config.params || {})}`;
+        const cachedResponse = this.cache.get(cacheKey);
+        
+        if (cachedResponse && Date.now() - cachedResponse.timestamp < this.cacheExpiration) {
+          logger.debug(`Cache hit for ${config.url}`);
+          return Promise.resolve(cachedResponse.data);
+        }
+      }
+      
+      return new Promise((resolve, reject) => {
+        this.queue.push({ config, resolve, reject });
+        this.processQueue();
+      });
+    } catch (error) {
+      logger.error(`Error in rateLimitedAxios.request: ${error.message}`);
+      return Promise.reject(error);
+    }
+  },
+  
+  updateAdaptiveThrottling() {
+    try {
+      // Keep only the last 20 response times
+      if (this.responseTimeHistory.length > 20) {
+        this.responseTimeHistory = this.responseTimeHistory.slice(-20);
+      }
+      
+      // Keep only the last 50 requests for time-based throttling
+      if (this.requestHistory.length > 50) {
+        this.requestHistory = this.requestHistory.slice(-50);
+      }
+      
+      // Calculate average response time
+      if (this.responseTimeHistory.length > 0) {
+        const avgResponseTime = this.responseTimeHistory.reduce((sum, time) => sum + time, 0) / this.responseTimeHistory.length;
+        
+        // Adjust request interval based on response time
+        if (avgResponseTime > 1000) {
+          // Slow down if responses are taking too long
+          this.minRequestInterval = Math.min(3000, this.minRequestInterval * 1.2);
+          logger.debug(`Increasing request interval to ${this.minRequestInterval}ms due to slow responses`);
+        } else if (avgResponseTime < 300 && this.minRequestInterval > 500) {
+          // Speed up if responses are fast
+          this.minRequestInterval = Math.max(500, this.minRequestInterval * 0.8);
+          logger.debug(`Decreasing request interval to ${this.minRequestInterval}ms due to fast responses`);
+        }
+      }
+      
+      // Check for rate limiting based on recent request density
+      const now = Date.now();
+      const recentRequests = this.requestHistory.filter(time => now - time < 10000).length;
+      
+      // If we've made more than 15 requests in the last 10 seconds, slow down
+      if (recentRequests > 15) {
+        this.minRequestInterval = Math.min(3000, this.minRequestInterval * 1.5);
+        logger.debug(`Increasing request interval to ${this.minRequestInterval}ms due to high request volume`);
+      }
+    } catch (error) {
+      logger.error(`Error in updateAdaptiveThrottling: ${error.message}`);
+    }
+  },
+  
+  async processQueue() {
+    try {
+      if (this.processing || this.queue.length === 0 || this.activeRequests >= this.maxConcurrentRequests) return;
+      
+      this.processing = true;
+      
+      // Update adaptive throttling
+      this.updateAdaptiveThrottling();
+      
+      // Safety check for empty queue (could happen in race conditions)
+      if (this.queue.length === 0) {
+        this.processing = false;
+        return;
+      }
+      
+      const { config, resolve, reject } = this.queue.shift();
+      const now = Date.now();
+      const timeToWait = Math.max(0, this.lastRequestTime + this.minRequestInterval - now);
+      
+      if (timeToWait > 0) {
+        await new Promise(r => setTimeout(r, timeToWait));
+      }
+      
+      this.activeRequests++;
+      this.requestHistory.push(Date.now());
+      const requestStartTime = Date.now();
+      
+      try {
+        // Add timeout to axios request
+        const axiosConfig = {
+          ...config,
+          timeout: config.timeout || 30000 // 30 second timeout default
+        };
+        
+        const response = await axios(axiosConfig);
+        this.lastRequestTime = Date.now();
+        
+        // Record response time for adaptive throttling
+        const responseTime = Date.now() - requestStartTime;
+        this.responseTimeHistory.push(responseTime);
+        
+        // Cache the response if caching is enabled
+        if (config.dexscreener?.apiSettings?.cacheResponses !== false) {
+          const cacheKey = `${config.method || 'get'}-${config.url}-${JSON.stringify(config.params || {})}`;
+          this.cache.set(cacheKey, {
+            data: response,
+            timestamp: Date.now()
+          });
+        }
+        
+        resolve(response);
+      } catch (error) {
+        // Improved error logging
+        if (error.response) {
+          // The request was made and the server responded with a status code outside of 2xx
+          logger.warn(`API error: ${error.response.status} - ${error.response.statusText} for ${config.url}`);
+        } else if (error.request) {
+          // The request was made but no response was received
+          logger.warn(`No response received for request to ${config.url}: ${error.message}`);
+        } else {
+          // Something happened in setting up the request
+          logger.warn(`Request setup error for ${config.url}: ${error.message}`);
+        }
+        
+        // Handle rate limiting with exponential backoff
+        if (error.response && (error.response.status === 429 || error.response.status === 503)) {
+          let retries = 0;
+          const maxRetries = config.dexscreener?.apiSettings?.maxRetries || 5;
+          let delay = config.dexscreener?.apiSettings?.retryDelayMs || 1000;
+          
+          while (retries < maxRetries) {
+            retries++;
+            logger.warn(`Server responded with ${error.response.status} status. Retrying after ${delay}ms delay...`);
+            await new Promise(r => setTimeout(r, delay));
+            
+            try {
+              const response = await axios({
+                ...config,
+                timeout: config.timeout || 30000 // 30 second timeout default
+              });
+              this.lastRequestTime = Date.now();
+              
+              // Record response time for adaptive throttling
+              const responseTime = Date.now() - requestStartTime;
+              this.responseTimeHistory.push(responseTime);
+              
+              // Cache the response if caching is enabled
+              if (config.dexscreener?.apiSettings?.cacheResponses !== false) {
+                const cacheKey = `${config.method || 'get'}-${config.url}-${JSON.stringify(config.params || {})}`;
+                this.cache.set(cacheKey, {
+                  data: response,
+                  timestamp: Date.now()
+                });
+              }
+              
+              resolve(response);
+              break;
+            } catch (retryError) {
+              if ((retryError.response && (retryError.response.status === 429 || retryError.response.status === 503)) && retries < maxRetries) {
+                delay *= 2; // Exponential backoff
+                continue;
+              }
+              if (retries === maxRetries) {
+                logger.error(`Max retries (${maxRetries}) reached for ${config.url}`);
+                reject(retryError);
+              }
+            }
+          }
+        } else {
+          // For non-rate-limiting errors, just reject
+          reject(error);
+        }
+      } finally {
+        this.activeRequests--;
+        this.processing = false;
+        
+        // Continue processing the queue with a small delay to prevent tight loops
+        setTimeout(() => this.processQueue(), 50);
+      }
+    } catch (outerError) {
+      // Catch any unexpected errors in the processQueue method itself
+      logger.error(`Unexpected error in processQueue: ${outerError.message}`);
+      logger.error(outerError.stack);
+      
+      // Reset state to prevent deadlocks
+      this.processing = false;
+      this.activeRequests = Math.max(0, this.activeRequests - 1);
+      
+      // Continue processing the queue after a delay
+      setTimeout(() => this.processQueue(), 1000);
+    }
+  },
+  
+  get(url, config = {}) {
+    return this.request({ ...config, method: 'get', url });
+  }
+};
+
+class MarketScanner {
+  constructor() {
+    // Ensure we have the correct API endpoints
+    this.baseUrl = config.dexscreener?.baseUrl || 'https://api.dexscreener.com/latest';
+    this.pairsEndpoint = config.dexscreener?.pairsEndpoint || '/dex/pairs';
+    this.searchEndpoint = config.dexscreener?.searchEndpoint || '/search';
+    this.trendingEndpoint = '/trending'; // Add trending endpoint
+    
+    // Log the API endpoints we're using
+    logger.info(`Using DexScreener API: ${this.baseUrl}`);
+    
+    // Load configuration from the updated config file with extremely lenient defaults
+    this.minLiquidityUsd = config.dexscreener?.pairFilters?.minLiquidityUsd || 10; // Extremely reduced
+    this.minVolumeUsd = config.dexscreener?.pairFilters?.minVolumeUsd || 5; // Extremely reduced
+    this.maxPairAgeHours = config.dexscreener?.pairFilters?.maxPairAgeHours || 72; // Greatly increased
+    this.minPriceChangePercentage = config.dexscreener?.pairFilters?.minPriceChangePercentage || 0; // No minimum
+    this.prioritizeNewPairs = config.dexscreener?.pairFilters?.prioritizeNewPairs || true;
+    this.maxMarketCapUsd = config.dexscreener?.pairFilters?.maxMarketCapUsd || 10000000; // Greatly increased
+    this.minPriceIncrease1h = config.dexscreener?.pairFilters?.minPriceIncrease1h || 0; // No minimum
+    this.minVolumeIncrease1h = config.dexscreener?.pairFilters?.minVolumeIncrease1h || 0; // No minimum
+    
+    // Log the filtering criteria we're using
+    logger.info(`Using extremely lenient filtering criteria: min liquidity ${this.minLiquidityUsd}, min volume ${this.minVolumeUsd}, max age ${this.maxPairAgeHours}h`);
+    
+    // Meme token identifiers from config
+    this.memeTokenIdentifiers = config.dexscreener?.pairFilters?.memeTokenIdentifiers || [
+      'MEME', 'PEPE', 'DOGE', 'CAT', 'SHIB', 'FLOKI', 'APE', 'WOJAK', 'CHAD', 'ELON', 'TRUMP', 'BIDEN',
+      'MOON', 'ROCKET', 'LAMBO', 'PUMP', 'FOMO', 'BASED', 'SIGMA', 'ALPHA', 'BETA', 'OMEGA', 'TURBO',
+      'HYPER', 'MEGA', 'GIGA', 'KING', 'QUEEN', 'DEGEN', 'BULL', 'BEAR', 'MONKEY', 'FROG'
+    ];
+    
+    // Excluded tokens from config
+    this.excludeTokens = config.dexscreener?.pairFilters?.excludeTokens || [
+      'SCAM', 'RUG', 'HONEYPOT', 'HONEY', 'POT', 'FAKE', 'STEAL', 'THEFT', 'PONZI', 'PYRAMID', 'SCHEME'
+    ];
+    
+    // Base tokens from config - greatly expanded list
+    this.baseTokens = config.dexscreener?.pairFilters?.baseTokens || [
+      // Major Solana tokens
+      'SOL', 'WSOL', 'USDC', 'USDT', 'BONK', 'WIF', 'BOME', 'RAY', 'ORCA', 'JUP', 'MSOL', 'JSOL',
+      // Additional Solana tokens
+      'SAMO', 'DUST', 'PYTH', 'MEAN', 'HADES', 'RENDER', 'SHDW', 'MNGO', 'SLND', 'ATLAS',
+      // Common prefixes/suffixes
+      'S', 'W', 'M', 'J', 'B', 'USD', 'COIN', 'TOKEN', 'SWAP', 'DEX', 'FINANCE', 'PROTOCOL',
+      // Just accept almost anything to debug
+      'A', 'E', 'I', 'O', 'U'
+    ];
+    
+    // Log the base tokens we're using
+    logger.info(`Using ${this.baseTokens.length} base tokens for filtering: ${this.baseTokens.join(', ')}`);
+    
+    // Advanced filtering options
+    this.usePatternRecognition = config.dexscreener?.pairFilters?.advancedFiltering?.usePatternRecognition || false;
+    this.analyzeCreationPatterns = config.dexscreener?.pairFilters?.advancedFiltering?.analyzeCreationPatterns || false;
+    this.detectNameTrends = config.dexscreener?.pairFilters?.advancedFiltering?.detectNameTrends || false;
+    this.analyzeSymbolPatterns = config.dexscreener?.pairFilters?.advancedFiltering?.analyzeSymbolPatterns || false;
+    this.correlateWithSocialTrends = config.dexscreener?.pairFilters?.advancedFiltering?.correlateWithSocialTrends || false;
+    this.useMachineLearning = config.dexscreener?.pairFilters?.advancedFiltering?.useMachineLearning || false;
+    this.analyzeTokenContract = config.dexscreener?.pairFilters?.advancedFiltering?.analyzeTokenContract || false;
+    this.detectScamPatterns = config.dexscreener?.pairFilters?.advancedFiltering?.detectScamPatterns || false;
+    
+    // Scanner state
+    this.lastScanTimestamp = 0;
+    this.knownPairs = new Set();
+    this.knownTokenPairs = new Set(); // Track token symbol pairs to avoid duplicates
+    this.knownTokenAddresses = new Set(); // Track token addresses
+    
+    // Load token detection filtering settings from config
+    this.tokenFilteringEnabled = config.scanner?.tokenDetectionFiltering?.enabled || true;
+    this.commonTokens = config.scanner?.tokenDetectionFiltering?.commonTokens || 
+      ['MEME', 'BONK', 'WIF', '$WIF', 'AI', 'SOL', 'SOLANA', 'DOGWIFHAT'];
+    this.maxPairsPerTokenSymbol = config.scanner?.tokenDetectionFiltering?.maxPairsPerTokenSymbol || 3;
+    this.minLiquidityDifferenceUsd = config.scanner?.tokenDetectionFiltering?.minLiquidityDifferenceUsd || 5000;
+    this.prioritizeHigherLiquidity = config.scanner?.tokenDetectionFiltering?.prioritizeHigherLiquidity || true;
+    this.maxTrackingSetSize = config.scanner?.tokenDetectionFiltering?.maxTrackingSetSize || 5000;
+    
+    // Track token pairs by symbol for better filtering
+    this.tokenPairsBySymbol = {};
+    
+    // Initialize social trend tracking
+    this.socialTrendTracker = {
+      trendingTokens: new Map(), // Map of token symbols to trend scores
+      lastUpdate: 0,
+      updateInterval: 300000, // 5 minutes
+    };
+    
+    // Initialize pattern recognition for token names
+    this.namePatterns = {
+      prefixes: new Set(['BABY', 'MINI', 'SUPER', 'MEGA', 'GIGA', 'TURBO', 'HYPER', 'BASED', 'KING', 'QUEEN', 'DEGEN', 'CHAD', 'ALPHA', 'BETA', 'SIGMA', 'OMEGA']),
+      suffixes: new Set(['INU', 'DOGE', 'CAT', 'MOON', 'ROCKET', 'ELON', 'PEPE', 'WOJAK', 'CHAD', 'FROG', 'SHIB', 'FLOKI', 'COIN', 'TOKEN', 'FINANCE', 'SWAP', 'YIELD', 'FARM', 'MEME', 'APE', 'MONKEY', 'BULL', 'BEAR']),
+      trendingPatterns: new Map(), // Will be updated dynamically
+      lastUpdate: 0,
+      updateInterval: 1800000, // 30 minutes
+    };
+  }
+
+  async fetchSolanaPairs() {
+    try {
+      // Try multiple search strategies based on our meme token identifiers
+      const searchQueries = [
+        'solana', 'sol', 'meme', 'ai', 'bonk', 'dogwifhat', 'wif', 'pepe', 'doge', 'cat', 'moon',
+        ...(Array.isArray(this.memeTokenIdentifiers) ? this.memeTokenIdentifiers.slice(0, 15) : []) // Use more of our meme token identifiers as search queries
+      ];
+      
+      // Add chain-specific queries
+      searchQueries.push('chain:solana');
+      
+      // Deduplicate search queries
+      const uniqueQueries = [...new Set(searchQueries)];
+      let allPairs = [];
+      
+      // Try specific DEXes on Solana
+      const solanaDexes = ['raydium', 'orca', 'jupiter', 'meteora'];
+      
+      // Try DEX-specific endpoints
+      for (const dex of solanaDexes) {
+        try {
+          // Use the search endpoint with dex filter
+          const dexQuery = `${dex} chain:solana`;
+          logger.debug(`Trying DEX-specific query: ${dexQuery}`);
+          
+          const pairs = await this.fetchPairsForQuery(dexQuery);
+          if (Array.isArray(pairs) && pairs.length > 0) {
+            logger.debug(`Found ${pairs.length} pairs from ${dex} DEX`);
+            allPairs = [...allPairs, ...pairs];
+          }
+          
+          // Add a small delay between DEX queries
+          await new Promise(r => setTimeout(r, 300));
+        } catch (error) {
+          logger.warn(`Error fetching pairs for DEX ${dex}: ${error.message}`);
+        }
+      }
+      
+      // Use parallel requests if enabled
+      if (config.dexscreener?.apiSettings?.useParallelRequests) {
+        const maxParallel = config.dexscreener?.apiSettings?.maxParallelRequests || 2; // Reduced parallelism to avoid rate limits
+        
+        // Process in batches to avoid overwhelming the API
+        for (let i = 0; i < uniqueQueries.length; i += maxParallel) {
+          const batch = uniqueQueries.slice(i, i + maxParallel);
+          const batchPromises = batch.map(query => this.fetchPairsForQuery(query));
+          
+          try {
+            const batchResults = await Promise.all(batchPromises);
+            // Ensure each result is an array before flattening
+            const validResults = batchResults.filter(result => Array.isArray(result));
+            allPairs = [...allPairs, ...validResults.flat()];
+          } catch (error) {
+            logger.error(`Error processing batch of queries: ${error.message}`);
+          }
+          
+          // Increased delay between batches to avoid rate limiting
+          if (i + maxParallel < uniqueQueries.length) {
+            await new Promise(r => setTimeout(r, 1000)); // Increased delay to 1 second
+          }
+        }
+      } else {
+        // Sequential requests
+        for (const query of uniqueQueries) {
+          try {
+            const pairs = await this.fetchPairsForQuery(query);
+            if (Array.isArray(pairs)) {
+              allPairs = [...allPairs, ...pairs];
+            }
+          } catch (error) {
+            logger.error(`Error fetching pairs for query "${query}": ${error.message}`);
+          }
+          // Add delay between sequential requests
+          await new Promise(r => setTimeout(r, 500)); // Increased delay to 500ms
+        }
+      }
+      
+      // Log the total number of pairs found before filtering
+      logger.info(`Found ${allPairs.length} total pairs before filtering`);
+      
+      // If we still have no pairs, try a direct API call to get trending pairs
+      if (allPairs.length === 0) {
+        try {
+          logger.info('Attempting to fetch trending pairs as fallback...');
+          const trendingUrl = `${this.baseUrl}/trending`;
+          const trendingResponse = await rateLimitedAxios.get(trendingUrl);
+          
+          if (trendingResponse && trendingResponse.data && Array.isArray(trendingResponse.data.pairs)) {
+            const trendingPairs = trendingResponse.data.pairs.filter(pair => pair.chainId === 'solana');
+            logger.info(`Found ${trendingPairs.length} trending Solana pairs`);
+            allPairs = [...allPairs, ...trendingPairs];
+          }
+        } catch (error) {
+          logger.warn(`Error fetching trending pairs: ${error.message}`);
+        }
+      }
+      
+      // If we still have no pairs, try a more direct approach with specific token addresses
+      if (allPairs.length === 0) {
+        try {
+          logger.info('Attempting to fetch pairs by token address as fallback...');
+          // Some popular Solana token addresses
+          const popularTokens = [
+            'So11111111111111111111111111111111111111112', // Wrapped SOL
+            'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
+            'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', // BONK
+            '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU', // SAMO
+            'DUSTawucrTsGU8hcqRdHDCbuYhCPADMLM2VcCb8VnFnQ', // DUST
+            'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4'  // JUP
+          ];
+          
+          for (const tokenAddress of popularTokens) {
+            try {
+              const tokenUrl = `${this.baseUrl}/dex/tokens/${tokenAddress}`;
+              logger.debug(`Fetching pairs for token: ${tokenAddress}`);
+              const tokenResponse = await rateLimitedAxios.get(tokenUrl);
+              
+              if (tokenResponse && tokenResponse.data && Array.isArray(tokenResponse.data.pairs)) {
+                const tokenPairs = tokenResponse.data.pairs.filter(pair => pair.chainId === 'solana');
+                logger.info(`Found ${tokenPairs.length} pairs for token ${tokenAddress}`);
+                allPairs = [...allPairs, ...tokenPairs];
+              }
+              
+              // Add delay between token requests
+              await new Promise(r => setTimeout(r, 500));
+            } catch (tokenError) {
+              logger.warn(`Error fetching pairs for token ${tokenAddress}: ${tokenError.message}`);
+            }
+          }
+        } catch (error) {
+          logger.warn(`Error in token address fallback: ${error.message}`);
+        }
+      }
+      
+      // Remove duplicates by pair address
+      const uniquePairs = [];
+      const pairAddresses = new Set();
+      
+      // First pass: normalize token data and deduplicate by address
+      // Add detailed logging for debugging
+      logger.debug(`Processing ${allPairs.length} pairs for deduplication`);
+      let skippedNonSolana = 0;
+      let skippedNoAddress = 0;
+      let skippedDuplicate = 0;
+      let skippedBaseToken = 0;
+      let skippedExcluded = 0;
+      let skippedNoSymbols = 0;
+      
+      for (const pair of allPairs) {
+        // Skip pairs without a pairAddress
+        if (!pair || !pair.pairAddress) {
+          skippedNoAddress++;
+          continue;
+        }
+        
+        // Skip duplicates
+        if (pairAddresses.has(pair.pairAddress)) {
+          skippedDuplicate++;
+          continue;
+        }
+        
+        // Ensure the pair is from Solana
+        if (pair.chainId !== 'solana') {
+          skippedNonSolana++;
+          continue; // Skip non-Solana pairs
+        }
+        
+        // Normalize token symbols
+        if (pair.baseToken && pair.baseToken.symbol) {
+          pair.baseToken.symbol = pair.baseToken.symbol.trim().toUpperCase();
+        }
+        if (pair.quoteToken && pair.quoteToken.symbol) {
+          pair.quoteToken.symbol = pair.quoteToken.symbol.trim().toUpperCase();
+        }
+        
+        // Skip pairs without proper token info
+        if (!pair.baseToken?.symbol || !pair.quoteToken?.symbol) {
+          skippedNoSymbols++;
+          continue;
+        }
+        
+        // TEMPORARILY DISABLE BASE TOKEN FILTERING TO DEBUG
+        // We'll just log what would have been filtered instead
+        const baseSymbol = pair.baseToken.symbol;
+        const quoteSymbol = pair.quoteToken.symbol;
+        
+        // Check if either the base or quote token is in our baseTokens list
+        if (Array.isArray(this.baseTokens) && this.baseTokens.length > 0) {
+          const baseInList = this.baseTokens.some(token => baseSymbol.includes(token));
+          const quoteInList = this.baseTokens.some(token => quoteSymbol.includes(token));
+          
+          // Just log but don't filter
+          if (!baseInList && !quoteInList) {
+            logger.debug(`Would have skipped pair with tokens ${baseSymbol}/${quoteSymbol} due to base token filtering`);
+            // Don't skip for now to see if this is the issue
+            // skippedBaseToken++;
+            // continue;
+          }
+        }
+        
+        // Apply excluded token filtering
+        if (Array.isArray(this.excludeTokens) && this.excludeTokens.length > 0) {
+          const baseExcluded = this.excludeTokens.some(token => baseSymbol.includes(token));
+          const quoteExcluded = this.excludeTokens.some(token => quoteSymbol.includes(token));
+          
+          if (baseExcluded || quoteExcluded) {
+            skippedExcluded++;
+            continue; // Skip this pair
+          }
+        }
+        
+        pairAddresses.add(pair.pairAddress);
+        uniquePairs.push(pair);
+      }
+      
+      // Log detailed statistics about what was filtered
+      logger.info(`Deduplication stats: ${skippedNonSolana} non-Solana, ${skippedNoAddress} no address, ${skippedDuplicate} duplicates, ${skippedBaseToken} base token filtered, ${skippedExcluded} excluded, ${skippedNoSymbols} no symbols`);
+      
+      // Log the number of unique pairs after deduplication
+      logger.info(`Found ${uniquePairs.length} unique pairs after deduplication`);
+      
+      // Second pass: prioritize pairs with higher liquidity when symbols match
+      const symbolPairs = {};
+      for (const pair of uniquePairs) {
+        if (!pair.baseToken?.symbol || !pair.quoteToken?.symbol) continue;
+        
+        const baseSymbol = pair.baseToken.symbol;
+        const quoteSymbol = pair.quoteToken.symbol;
+        const pairKey = `${baseSymbol}/${quoteSymbol}`;
+        
+        const liquidity = parseFloat(pair.liquidity?.usd || 0);
+        
+        if (!symbolPairs[pairKey] || liquidity > symbolPairs[pairKey].liquidity) {
+          symbolPairs[pairKey] = {
+            pair,
+            liquidity
+          };
+        }
+      }
+      
+      // Apply pattern recognition if enabled
+      let filteredPairs = uniquePairs;
+      if (this.usePatternRecognition) {
+        filteredPairs = this.applyPatternRecognition(filteredPairs);
+      }
+      
+      // Apply name trend detection if enabled
+      if (this.detectNameTrends) {
+        filteredPairs = this.applyNameTrendDetection(filteredPairs);
+      }
+      
+      // Apply scam pattern detection if enabled
+      if (this.detectScamPatterns) {
+        filteredPairs = this.applyScamPatternDetection(filteredPairs);
+      }
+      
+      logger.info(`Fetched ${filteredPairs.length} unique Solana pairs from Dexscreener after filtering`);
+      return filteredPairs;
+    } catch (error) {
+      logger.error(`Error fetching Solana pairs: ${error.message}`);
+      logger.error(error.stack);
+      return [];
+    }
+  }
+  
+  async fetchPairsForQuery(query) {
+    try {
+      // Encode the query properly for URL
+      const encodedQuery = encodeURIComponent(query);
+      const searchUrl = `${this.baseUrl}${this.searchEndpoint}?q=${encodedQuery}`;
+      logger.debug(`Using search endpoint: ${searchUrl}`);
+      
+      const searchResponse = await rateLimitedAxios.get(searchUrl);
+      
+      // Add more detailed logging to debug the response structure
+      if (!searchResponse) {
+        logger.warn(`No response received for query "${query}"`);
+        return [];
+      }
+      
+      if (!searchResponse.data) {
+        logger.warn(`Response has no data property for query "${query}"`);
+        return [];
+      }
+      
+      // Check if the response structure has changed
+      if (!Array.isArray(searchResponse.data.pairs)) {
+        // Try to handle different response formats
+        if (searchResponse.data.pairs && typeof searchResponse.data.pairs === 'object') {
+          // If pairs is an object, try to convert it to an array
+          logger.warn(`Response data.pairs is not an array for query "${query}". Attempting to convert.`);
+          const pairsArray = Object.values(searchResponse.data.pairs);
+          if (Array.isArray(pairsArray) && pairsArray.length > 0) {
+            logger.debug(`Successfully converted pairs object to array with ${pairsArray.length} items`);
+            return pairsArray.filter(pair => pair.chainId === 'solana');
+          }
+        }
+        
+        // If we have a different structure, try to find pairs in it
+        if (searchResponse.data.results && Array.isArray(searchResponse.data.results)) {
+          logger.debug(`Found 'results' array in response for query "${query}"`);
+          return searchResponse.data.results.filter(pair => pair.chainId === 'solana');
+        }
+        
+        // If we have a different structure with tokens
+        if (searchResponse.data.tokens && Array.isArray(searchResponse.data.tokens)) {
+          logger.debug(`Found 'tokens' array in response for query "${query}"`);
+          // Extract pairs from tokens if possible
+          const pairs = [];
+          for (const token of searchResponse.data.tokens) {
+            if (token.pairs && Array.isArray(token.pairs)) {
+              pairs.push(...token.pairs.filter(pair => pair.chainId === 'solana'));
+            }
+          }
+          return pairs;
+        }
+        
+        logger.warn(`Response data.pairs is not an array for query "${query}". Response structure: ${JSON.stringify(searchResponse.data).substring(0, 200)}...`);
+        return [];
+      }
+      
+      // Filter for Solana pairs with more detailed logging
+      const allPairs = searchResponse.data.pairs;
+      const solanaPairs = allPairs.filter(pair => {
+        const isSolana = pair.chainId === 'solana';
+        if (!isSolana && pair.chainId) {
+          logger.debug(`Skipping non-Solana pair with chainId: ${pair.chainId}`);
+        }
+        return isSolana;
+      });
+      
+      logger.debug(`Found ${solanaPairs.length} Solana pairs out of ${allPairs.length} total pairs for query "${query}"`);
+      
+      // Additional validation to ensure we have proper pair data
+      const validPairs = solanaPairs.filter(pair => {
+        if (!pair.pairAddress) {
+          logger.debug('Skipping pair without pairAddress');
+          return false;
+        }
+        if (!pair.baseToken?.symbol || !pair.quoteToken?.symbol) {
+          logger.debug('Skipping pair without proper token symbols');
+          return false;
+        }
+        return true;
+      });
+      
+      logger.debug(`Found ${validPairs.length} valid Solana pairs for query "${query}"`);
+      return validPairs;
+    } catch (error) {
+      logger.warn(`Error fetching pairs for query "${query}": ${error.message}`);
+      return [];
+    }
+  }
+  
+  applyPatternRecognition(pairs) {
+    if (!this.usePatternRecognition) return pairs;
+    
+    // Update trending patterns if needed
+    this.updateNamePatterns();
+    
+    return pairs.map(pair => {
+      // Add a pattern score to each pair
+      const baseSymbol = pair.baseToken.symbol;
+      const baseName = pair.baseToken.name || '';
+      
+      let patternScore = 0;
+      
+      // Check for known prefixes
+      for (const prefix of this.namePatterns.prefixes) {
+        if (baseSymbol.startsWith(prefix) || baseName.toUpperCase().startsWith(prefix)) {
+          patternScore += 0.15; // Increased weight for prefix matches
+          break;
+        }
+      }
+      
+      // Check for known suffixes
+      for (const suffix of this.namePatterns.suffixes) {
+        if (baseSymbol.endsWith(suffix) || baseName.toUpperCase().endsWith(suffix)) {
+          patternScore += 0.15; // Increased weight for suffix matches
+          break;
+        }
+      }
+      
+      // Check for trending patterns
+      this.namePatterns.trendingPatterns.forEach((score, pattern) => {
+        if (baseSymbol.includes(pattern) || baseName.toUpperCase().includes(pattern)) {
+          patternScore += score;
+        }
+      });
+      
+      // Check for meme-related words in the token name
+      const memeWords = ['MEME', 'VIRAL', 'TREND', 'HYPE', 'FOMO', 'MOON', 'PUMP', 'LAMBO', 'RICH', 'MILLIONAIRE'];
+      for (const word of memeWords) {
+        if (baseSymbol.includes(word) || baseName.toUpperCase().includes(word)) {
+          patternScore += 0.1;
+          break;
+        }
+      }
+      
+      // Check for special characters that are common in meme tokens
+      if (baseSymbol.includes('$') || baseSymbol.includes('_') || baseSymbol.includes('69') || baseSymbol.includes('420')) {
+        patternScore += 0.1;
+      }
+      
+      // Check for all caps names which are common in meme tokens
+      if (baseSymbol === baseSymbol.toUpperCase() && baseSymbol.length > 2) {
+        patternScore += 0.05;
+      }
+      
+      // Add the pattern score to the pair
+      pair.patternScore = patternScore;
+      return pair;
+    }).sort((a, b) => {
+      // Sort by pattern score (higher first)
+      return (b.patternScore || 0) - (a.patternScore || 0);
+    });
+  }
+  
+  updateNamePatterns() {
+    const now = Date.now();
+    if (now - this.namePatterns.lastUpdate < this.namePatterns.updateInterval) {
+      return; // Not time to update yet
+    }
+    
+    // Update trending patterns based on recent successful tokens
+    // This would ideally come from a database of successful tokens
+    // For now, we'll just use a static list that would be updated periodically
+    this.namePatterns.trendingPatterns.clear();
+    
+    // These would be dynamically updated based on recent successful tokens
+    const currentTrends = [
+      { pattern: 'PEPE', score: 0.25 },
+      { pattern: 'AI', score: 0.20 },
+      { pattern: 'TURBO', score: 0.15 },
+      { pattern: 'WOJAK', score: 0.15 },
+      { pattern: 'CHAD', score: 0.15 },
+      { pattern: 'SIGMA', score: 0.15 },
+      { pattern: 'DOGE', score: 0.15 },
+      { pattern: 'CAT', score: 0.15 },
+      { pattern: 'ELON', score: 0.15 },
+      { pattern: 'TRUMP', score: 0.15 },
+      { pattern: 'BIDEN', score: 0.15 },
+      { pattern: 'MEME', score: 0.20 },
+      { pattern: 'BASED', score: 0.15 },
+      { pattern: 'FROG', score: 0.15 },
+      { pattern: 'SHIB', score: 0.15 },
+      { pattern: 'FLOKI', score: 0.15 },
+      { pattern: 'MOON', score: 0.15 },
+      { pattern: 'ROCKET', score: 0.15 },
+      { pattern: 'LAMBO', score: 0.15 },
+      { pattern: 'PUMP', score: 0.15 },
+      { pattern: 'VIRAL', score: 0.20 },
+      { pattern: 'TREND', score: 0.20 },
+      { pattern: 'HYPE', score: 0.20 },
+      { pattern: 'FOMO', score: 0.15 },
+      { pattern: 'APE', score: 0.15 },
+      { pattern: 'MONKEY', score: 0.15 },
+      { pattern: 'BULL', score: 0.15 },
+      { pattern: 'DEGEN', score: 0.20 },
+    ];
+    
+    for (const { pattern, score } of currentTrends) {
+      this.namePatterns.trendingPatterns.set(pattern, score);
+    }
+    
+    this.namePatterns.lastUpdate = now;
+  }
+  
+  applyNameTrendDetection(pairs) {
+    if (!this.detectNameTrends) return pairs;
+    
+    // This would ideally use NLP or other advanced techniques
+    // For now, we'll just use a simple keyword matching approach
+    return pairs.map(pair => {
+      const baseSymbol = pair.baseToken.symbol;
+      const baseName = pair.baseToken.name || '';
+      
+      let trendScore = 0;
+      
+      // Check for trending keywords in the token name or symbol
+      for (const keyword of this.memeTokenIdentifiers) {
+        if (baseSymbol.includes(keyword) || baseName.toUpperCase().includes(keyword.toUpperCase())) {
+          trendScore += 0.05;
+        }
+      }
+      
+      // Add the trend score to the pair
+      pair.trendScore = (pair.trendScore || 0) + trendScore;
+      return pair;
+    });
+  }
+  
+  applyScamPatternDetection(pairs) {
+    if (!this.detectScamPatterns) return pairs;
+    
+    // This would ideally use more sophisticated techniques
+    // For now, we'll just use some simple heuristics
+    return pairs.filter(pair => {
+      const baseSymbol = pair.baseToken.symbol;
+      const baseName = pair.baseToken.name || '';
+      
+      // Filter out pairs with suspicious patterns
+      const suspiciousPatterns = [
+        'SCAM', 'RUG', 'HONEYPOT', 'HONEY', 'POT', 'FAKE',
+        'STEAL', 'THEFT', 'PONZI', 'PYRAMID', 'SCHEME'
+      ];
+      
+      for (const pattern of suspiciousPatterns) {
+        if (baseSymbol.includes(pattern) || baseName.toUpperCase().includes(pattern)) {
+          return false; // Skip this pair
+        }
+      }
+      
+      return true;
+    });
+  }
+  
+  // Filter pairs based on our criteria - with extremely lenient settings
+  filterPairs(pairs) {
+    // Ensure pairs is an array
+    if (!Array.isArray(pairs)) {
+      logger.warn('filterPairs received non-array input');
+      return [];
+    }
+    
+    // Check if array is empty
+    if (pairs.length === 0) {
+      logger.debug('No pairs to filter');
+      return [];
+    }
+    
+    // Log the initial count
+    logger.info(`Starting filtering with ${pairs.length} pairs`);
+    
+    // Start with all pairs
+    let filteredPairs = [...pairs];
+    let initialCount = filteredPairs.length;
+    
+    // EXTREMELY LENIENT FILTERING
+    // Only filter by minimum liquidity - set to a very low value
+    const minLiquidity = 1; // Just $1 minimum liquidity
+    if (minLiquidity > 0) {
+      const beforeCount = filteredPairs.length;
+      filteredPairs = filteredPairs.filter(pair => {
+        const liquidity = parseFloat(pair?.liquidity?.usd || 0);
+        return liquidity >= minLiquidity;
+      });
+      logger.info(`Liquidity filter: ${beforeCount} -> ${filteredPairs.length} pairs (min: ${minLiquidity})`);
+    }
+    
+    // Skip all other filters for now to debug
+    
+    // Filter out already known pairs
+    const beforeCount = filteredPairs.length;
+    filteredPairs = filteredPairs.filter(pair => {
+      return pair?.pairAddress && !this.knownPairs.has(pair.pairAddress);
+    });
+    logger.info(`Known pairs filter: ${beforeCount} -> ${filteredPairs.length} pairs`);
+    
+    // Add new pairs to known pairs set
+    filteredPairs.forEach(pair => {
+      if (pair?.pairAddress) {
+        this.knownPairs.add(pair.pairAddress);
+      }
+      
+      // Also track by token address
+      if (pair?.baseToken?.address) {
+        this.knownTokenAddresses.add(pair.baseToken.address);
+      }
+      if (pair?.quoteToken?.address) {
+        this.knownTokenAddresses.add(pair.quoteToken.address);
+      }
+    });
+    
+    // Sort by creation time (newest first) if prioritizing new pairs
+    if (this.prioritizeNewPairs) {
+      filteredPairs.sort((a, b) => {
+        const timeA = a?.pairCreatedAt ? new Date(a.pairCreatedAt).getTime() : 0;
+        const timeB = b?.pairCreatedAt ? new Date(b.pairCreatedAt).getTime() : 0;
+        return timeB - timeA;
+      });
+    }
+    
+    // Limit the number of pairs to return to avoid overwhelming the system
+    const maxPairsToReturn = 50;
+    if (filteredPairs.length > maxPairsToReturn) {
+      logger.info(`Limiting results to ${maxPairsToReturn} pairs`);
+      filteredPairs = filteredPairs.slice(0, maxPairsToReturn);
+    }
+    
+    return filteredPairs;
+  }
+  
+  // Main scanning function
+  async scan() {
+    try {
+      const startTime = Date.now();
+      logger.info('Starting market scan for new pairs');
+      
+      // Fetch pairs from DexScreener
+      logger.info('Fetching pairs from DexScreener...');
+      const pairs = await this.fetchSolanaPairs();
+      
+      // Ensure pairs is an array
+      if (!Array.isArray(pairs)) {
+        logger.warn('fetchSolanaPairs did not return an array');
+        return [];
+      }
+      
+      // Log some sample pairs for debugging
+      if (pairs.length > 0) {
+        logger.info(`Sample pair data: ${JSON.stringify(pairs[0]).substring(0, 500)}...`);
+      }
+      
+      logger.info(`Fetched ${pairs.length} pairs from DexScreener, applying filters...`);
+      
+      // Filter pairs based on our criteria
+      const filteredPairs = this.filterPairs(pairs);
+      
+      // Ensure filteredPairs is an array
+      if (!Array.isArray(filteredPairs)) {
+        logger.warn('filterPairs did not return an array');
+        return [];
+      }
+      
+      // Update last scan timestamp
+      this.lastScanTimestamp = Date.now();
+      
+      const scanDuration = (Date.now() - startTime) / 1000;
+      logger.info(`Market scan completed in ${scanDuration.toFixed(2)}s, found ${filteredPairs.length} pairs matching criteria`);
+      
+      // If no pairs were found, log a more detailed message
+      if (filteredPairs.length === 0) {
+        logger.info('No new pairs found in market scan');
+        
+        // Check if we have any pairs in our known pairs set
+        logger.info(`Currently tracking ${this.knownPairs.size} known pairs`);
+        
+        // If we have too many known pairs, consider clearing some older ones
+        if (this.knownPairs.size > this.maxTrackingSetSize) {
+          logger.info(`Known pairs set exceeds max size (${this.knownPairs.size}/${this.maxTrackingSetSize}), clearing oldest entries`);
+          // In a real implementation, we would clear the oldest entries
+          // For now, just reset the set if it gets too large
+          this.knownPairs.clear();
+          logger.info('Known pairs set has been reset');
+        }
+      } else {
+        logger.info(`Found ${filteredPairs.length} new pairs in market scan`);
+        // Log some details about the first few pairs
+        filteredPairs.slice(0, 3).forEach((pair, index) => {
+          logger.info(`Pair ${index + 1}: ${pair.baseToken?.symbol}/${pair.quoteToken?.symbol} - Liquidity: ${pair.liquidity?.usd || 0}, Volume: ${pair.volume?.h24 || 0}`);
+        });
+      }
+      
+      return filteredPairs;
+    } catch (error) {
+      logger.error(`Error during market scan: ${error.message}`);
+      logger.error(`Stack trace: ${error.stack}`);
+      return [];
+    }
+  }
+}
+
+// Export an instance of the MarketScanner class instead of the class itself
+module.exports = new MarketScanner();

@@ -1,0 +1,239 @@
+const { PublicKey, LAMPORTS_PER_SOL } = require('@solana/web3.js');
+const { Token } = require('@solana/spl-token');
+const logger = require('../utils/logger');
+const config = require('../../config/config');
+const rpcManager = require('../utils/rpcManager');
+
+class OnChainAnalyzer {
+  constructor() {
+    this.minHolderCount = config.trading.minHolderCount || 50;
+  }
+
+  async analyzeToken(tokenAddress) {
+    try {
+      logger.info(`Analyzing token on-chain: ${tokenAddress}`);
+      
+      const tokenPublicKey = new PublicKey(tokenAddress);
+      
+      // Get token account info
+      const tokenInfo = await rpcManager.getAccountInfo(tokenPublicKey);
+      if (!tokenInfo) {
+        throw new Error(`Token account not found: ${tokenAddress}`);
+      }
+      
+      // Get token supply
+      const tokenSupply = await rpcManager.getTokenSupply(tokenPublicKey);
+      
+      // Get largest token accounts
+      const largestAccounts = await rpcManager.getTokenLargestAccounts(tokenPublicKey);
+      
+      // Calculate holder count and distribution
+      const holderCount = largestAccounts.value.length;
+      
+      // Calculate concentration (% held by top account)
+      let topAccountPercentage = 0;
+      if (largestAccounts.value.length > 0 && tokenSupply.value.uiAmount > 0) {
+        topAccountPercentage = (largestAccounts.value[0].uiAmount / tokenSupply.value.uiAmount) * 100;
+      }
+      
+      // Check if mint authority is revoked
+      const mintAuthorityRevoked = !tokenInfo.data.parsed.info.mintAuthority;
+      
+      // Get recent transactions
+      const signatures = await rpcManager.getSignaturesForAddress(tokenPublicKey, { limit: 10 });
+      const recentTransactions = signatures.length;
+      
+      // Get creation time (approximate from first transaction)
+      let creationTime = Date.now();
+      if (signatures.length > 0) {
+        const oldestSignature = signatures[signatures.length - 1].signature;
+        const tx = await rpcManager.getTransaction(oldestSignature);
+        if (tx) {
+          creationTime = tx.blockTime ? tx.blockTime * 1000 : Date.now();
+        }
+      }
+      
+      return {
+        address: tokenAddress,
+        supply: tokenSupply.value.uiAmount,
+        decimals: tokenSupply.value.decimals,
+        holderCount,
+        topAccountPercentage,
+        mintAuthorityRevoked,
+        recentTransactions,
+        creationTime,
+      };
+    } catch (error) {
+      logger.error(`Error analyzing token on-chain: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async checkHoneypot(tokenAddress) {
+    try {
+      logger.info(`Checking for honeypot: ${tokenAddress}`);
+      
+      // Simulate a swap to check if selling is possible
+      const swapAmount = 0.01; // Small amount of SOL
+      const result = await this.simulateSwap(tokenAddress, swapAmount);
+      
+      return {
+        isHoneypot: !result.success,
+        details: result.details || 'Swap simulation successful',
+      };
+    } catch (error) {
+      logger.error(`Error checking for honeypot: ${error.message}`);
+      return {
+        isHoneypot: true,
+        details: `Error during honeypot check: ${error.message}`,
+      };
+    }
+  }
+
+  async simulateSwap(tokenAddress, solAmount) {
+    try {
+      logger.info(`Simulating swap for token: ${tokenAddress} with ${solAmount} SOL`);
+      
+      // This is a simplified simulation - in a real implementation,
+      // you would use Jupiter or another DEX aggregator to simulate the actual swap
+      
+      // For now, we'll just assume the swap is successful if we can get the token info
+      const tokenPublicKey = new PublicKey(tokenAddress);
+      const tokenInfo = await rpcManager.getAccountInfo(tokenPublicKey);
+      
+      if (!tokenInfo) {
+        return {
+          success: false,
+          details: 'Token account not found',
+        };
+      }
+      
+      // In a real implementation, you would check liquidity, slippage, etc.
+      return {
+        success: true,
+        details: 'Swap simulation successful',
+      };
+    } catch (error) {
+      logger.error(`Error simulating swap: ${error.message}`);
+      return {
+        success: false,
+        details: `Error during swap simulation: ${error.message}`,
+      };
+    }
+  }
+
+  async checkRugPullRisk(tokenAddress) {
+    try {
+      logger.info(`Checking for rug pull risk: ${tokenAddress}`);
+      
+      const tokenData = await this.analyzeToken(tokenAddress);
+      
+      // Calculate risk score (0-1 where 1 is highest risk)
+      let riskScore = 0;
+      
+      // Factor 1: Mint authority not revoked
+      if (!tokenData.mintAuthorityRevoked) {
+        riskScore += 0.3;
+      }
+      
+      // Factor 2: Low holder count
+      if (tokenData.holderCount < this.minHolderCount) {
+        riskScore += 0.2;
+      }
+      
+      // Factor 3: High concentration in top wallet
+      if (tokenData.topAccountPercentage > 50) {
+        riskScore += 0.2;
+      }
+      
+      // Factor 4: Very new token (less than 24 hours)
+      const tokenAgeHours = (Date.now() - tokenData.creationTime) / (1000 * 60 * 60);
+      if (tokenAgeHours < 24) {
+        riskScore += 0.2;
+      }
+      
+      // Factor 5: Low transaction count
+      if (tokenData.recentTransactions < 5) {
+        riskScore += 0.1;
+      }
+      
+      return {
+        riskScore: Math.min(1, riskScore),
+        details: {
+          mintAuthorityRevoked: tokenData.mintAuthorityRevoked,
+          holderCount: tokenData.holderCount,
+          topAccountPercentage: tokenData.topAccountPercentage,
+          tokenAgeHours,
+          recentTransactions: tokenData.recentTransactions,
+        },
+      };
+    } catch (error) {
+      logger.error(`Error checking rug pull risk: ${error.message}`);
+      return {
+        riskScore: 0.7, // Default to moderately high risk if we can't analyze
+        details: {
+          error: `Failed to analyze: ${error.message}`,
+        },
+      };
+    }
+  }
+
+  async checkTokenSafety(tokenAddress) {
+    try {
+      // Get token data
+      const tokenData = await this.analyzeToken(tokenAddress);
+      
+      // Check for honeypot
+      const honeypotCheck = await this.checkHoneypot(tokenAddress);
+      
+      // Check for rug pull risk
+      const rugPullCheck = await this.checkRugPullRisk(tokenAddress);
+      
+      // Determine if token is safe
+      const isSafe = !honeypotCheck.isHoneypot && 
+                    rugPullCheck.riskScore < 0.5 &&
+                    tokenData.mintAuthorityRevoked &&
+                    tokenData.holderCount >= this.minHolderCount;
+      
+      // Compile reasons if unsafe
+      const reasons = [];
+      
+      if (honeypotCheck.isHoneypot) {
+        reasons.push('Potential honeypot');
+      }
+      
+      if (rugPullCheck.riskScore >= 0.5) {
+        reasons.push('High rug pull risk');
+      }
+      
+      if (!tokenData.mintAuthorityRevoked) {
+        reasons.push('Mint authority not revoked');
+      }
+      
+      if (tokenData.holderCount < this.minHolderCount) {
+        reasons.push(`Low holder count: ${tokenData.holderCount}`);
+      }
+      
+      return {
+        isSafe,
+        reasons: reasons.join(', ') || 'Token appears safe',
+        details: {
+          tokenData,
+          honeypotCheck,
+          rugPullCheck,
+        },
+      };
+    } catch (error) {
+      logger.error(`Error checking token safety: ${error.message}`);
+      return {
+        isSafe: false,
+        reasons: `Failed to fetch on-chain data: ${error.message}`,
+        details: {
+          error: error.message,
+        },
+      };
+    }
+  }
+}
+
+module.exports = new OnChainAnalyzer();

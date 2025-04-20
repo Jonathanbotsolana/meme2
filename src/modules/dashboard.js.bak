@@ -1,0 +1,339 @@
+const express = require('express');
+const config = require('../../config/config');
+const logger = require('../utils/logger');
+const database = require('../utils/database');
+const pnlTracker = require('./pnlTracker');
+const swapExecutor = require('./swapExecutor');
+
+class Dashboard {
+  constructor() {
+    this.app = null;
+    this.server = null;
+    this.port = config.dashboard.port;
+    this.enabled = config.dashboard.enabled;
+  }
+
+  async initialize() {
+    if (!this.enabled) {
+      logger.info('Dashboard is disabled in configuration');
+      return;
+    }
+    
+    try {
+      this.app = express();
+      
+      // Middleware
+      this.app.use(express.json());
+      this.app.use(express.static('public'));
+      
+      // Setup routes
+      this.setupRoutes();
+      
+      // Start server - explicitly use port 3001 to avoid conflicts
+      this.server = this.app.listen(3001, () => {
+        logger.info(`Dashboard running on port 3001`);
+      });
+    } catch (error) {
+      logger.error(`Error initializing dashboard: ${error.message}`);
+    }
+  }
+
+  setupRoutes() {
+    // API routes
+    this.app.get('/api/status', async (req, res) => {
+      try {
+        const walletBalance = await swapExecutor.getWalletBalance();
+        const tradingStats = pnlTracker.getTradingStats();
+        const activeTrades = pnlTracker.getActiveTrades();
+        
+        res.json({
+          status: 'running',
+          uptime: process.uptime(),
+          walletBalance,
+          tradingStats,
+          activeTrades: activeTrades.length,
+        });
+      } catch (error) {
+        logger.error(`Error in status API: ${error.message}`);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+    
+    this.app.get('/api/trades/active', async (req, res) => {
+      try {
+        const activeTrades = pnlTracker.getActiveTrades();
+        res.json(activeTrades);
+      } catch (error) {
+        logger.error(`Error in active trades API: ${error.message}`);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+    
+    this.app.get('/api/trades/history', async (req, res) => {
+      try {
+        const limit = parseInt(req.query.limit || '20');
+        const tradeHistory = await pnlTracker.getTradeHistory(limit);
+        res.json(tradeHistory);
+      } catch (error) {
+        logger.error(`Error in trade history API: ${error.message}`);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+    
+    this.app.get('/api/stats', async (req, res) => {
+      try {
+        const tradingStats = pnlTracker.getTradingStats();
+        res.json(tradingStats);
+      } catch (error) {
+        logger.error(`Error in stats API: ${error.message}`);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+    
+    // Manual control endpoints (protected by simple API key)
+    this.app.post('/api/control/sell', async (req, res) => {
+      try {
+        const { tokenAddress, apiKey } = req.body;
+        
+        // Simple API key check (in a real implementation, use proper authentication)
+        if (apiKey !== 'your-secret-api-key') {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        if (!tokenAddress) {
+          return res.status(400).json({ error: 'Token address is required' });
+        }
+        
+        // Check if token is in active trades
+        const activeTrades = pnlTracker.getActiveTrades();
+        const trade = activeTrades.find(t => t.tokenAddress === tokenAddress);
+        
+        if (!trade) {
+          return res.status(404).json({ error: 'Token not found in active trades' });
+        }
+        
+        // Get token balance
+        const tokenBalance = await swapExecutor.getTokenBalance(tokenAddress);
+        
+        // Execute sell
+        const sellResult = await swapExecutor.executeSell(
+          tokenAddress,
+          tokenBalance
+        );
+        
+        if (sellResult.success) {
+          // Close trade in tracker
+          await pnlTracker.closeTrade(
+            tokenAddress,
+            sellResult.outputAmountUsd / sellResult.inputAmount,
+            sellResult.inputAmount
+          );
+          
+          res.json({
+            success: true,
+            message: `Successfully sold ${trade.tokenSymbol}`,
+            result: sellResult,
+          });
+        } else {
+          res.status(500).json({
+            success: false,
+            error: sellResult.error,
+          });
+        }
+      } catch (error) {
+        logger.error(`Error in manual sell API: ${error.message}`);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+    
+    // Serve dashboard UI
+    this.app.get('/', (req, res) => {
+      res.send(`
+        <html>
+          <head>
+            <title>Kairos Meme Bot Dashboard</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+              h1 { color: #333; }
+              .card { border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px; }
+              .stats { display: flex; flex-wrap: wrap; }
+              .stat-item { flex: 1; min-width: 200px; margin: 10px; padding: 15px; background: #f5f5f5; border-radius: 4px; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+              th { background-color: #f2f2f2; }
+              .profit { color: green; }
+              .loss { color: red; }
+            </style>
+          </head>
+          <body>
+            <h1>Kairos Meme Bot Dashboard</h1>
+            <div class="card">
+              <h2>Bot Status</h2>
+              <div id="status">Loading...</div>
+            </div>
+            
+            <div class="card">
+              <h2>Trading Statistics</h2>
+              <div id="stats" class="stats">Loading...</div>
+            </div>
+            
+            <div class="card">
+              <h2>Active Trades</h2>
+              <div id="active-trades">Loading...</div>
+            </div>
+            
+            <div class="card">
+              <h2>Trade History</h2>
+              <div id="trade-history">Loading...</div>
+            </div>
+            
+            <script>
+              // Fetch and display data
+              async function fetchData() {
+                try {
+                  // Fetch status
+                  const statusRes = await fetch('/api/status');
+                  const statusData = await statusRes.json();
+                  document.getElementById('status').innerHTML = 
+                    '<p>Status: <strong>' + statusData.status + '</strong></p>' +
+                    '<p>Uptime: <strong>' + Math.floor(statusData.uptime / 60) + ' minutes</strong></p>' +
+                    '<p>Wallet Balance: <strong>' + statusData.walletBalance.toFixed(4) + ' SOL</strong></p>' +
+                    '<p>Active Trades: <strong>' + statusData.activeTrades + '</strong></p>';
+                  
+                  // Fetch stats
+                  const statsRes = await fetch('/api/stats');
+                  const statsData = await statsRes.json();
+                  document.getElementById('stats').innerHTML = 
+                    '<div class="stat-item">' +
+                    '  <h3>Total Trades</h3>' +
+                    '  <p>' + statsData.totalTrades + '</p>' +
+                    '</div>' +
+                    '<div class="stat-item">' +
+                    '  <h3>Win Rate</h3>' +
+                    '  <p>' + statsData.winRate.toFixed(2) + '%</p>' +
+                    '</div>' +
+                    '<div class="stat-item">' +
+                    '  <h3>Total P/L</h3>' +
+                    '  <p class="' + (statsData.totalProfitLoss >= 0 ? 'profit' : 'loss') + '">' +
+                    '    ' + statsData.totalProfitLoss.toFixed(2) + ' USD' +
+                    '  </p>' +
+                    '</div>' +
+                    '<div class="stat-item">' +
+                    '  <h3>Avg P/L per Trade</h3>' +
+                    '  <p class="' + (statsData.averageProfitLoss >= 0 ? 'profit' : 'loss') + '">' +
+                    '    ' + statsData.averageProfitLoss.toFixed(2) + '%' +
+                    '  </p>' +
+                    '</div>';
+                  
+                  // Fetch active trades
+                  const activeTradesRes = await fetch('/api/trades/active');
+                  const activeTradesData = await activeTradesRes.json();
+                  
+                  let activeTradesHtml = '<table><tr><th>Token</th><th>Buy Price</th><th>Current Price</th><th>P/L %</th><th>Action</th></tr>';
+                  
+                  if (activeTradesData.length === 0) {
+                    activeTradesHtml += '<tr><td colspan="5">No active trades</td></tr>';
+                  } else {
+                    activeTradesData.forEach(trade => {
+                      activeTradesHtml += 
+                        '<tr>' +
+                        '  <td>' + trade.tokenSymbol + '</td>' +
+                        '  <td>$' + trade.buyPrice.toFixed(8) + '</td>' +
+                        '  <td>$' + trade.currentPrice.toFixed(8) + '</td>' +
+                        '  <td class="' + (trade.profitLossPercent >= 0 ? 'profit' : 'loss') + '">' +
+                        '    ' + trade.profitLossPercent.toFixed(2) + '%' +
+                        '  </td>' +
+                        '  <td>' +
+                        '    <button onclick="sellToken(\'' + trade.tokenAddress + '\')">' + 'Sell</button>' +
+                        '  </td>' +
+                        '</tr>';
+                    });
+                  }
+                  
+                  activeTradesHtml += '</table>';
+                  document.getElementById('active-trades').innerHTML = activeTradesHtml;
+                  
+                  // Fetch trade history
+                  const historyRes = await fetch('/api/trades/history');
+                  const historyData = await historyRes.json();
+                  
+                  let historyHtml = '<table><tr><th>Token</th><th>Buy Price</th><th>Sell Price</th><th>P/L %</th><th>Date</th></tr>';
+                  
+                  if (historyData.length === 0) {
+                    historyHtml += '<tr><td colspan="5">No trade history</td></tr>';
+                  } else {
+                    historyData.forEach(trade => {
+                      historyHtml += 
+                        '<tr>' +
+                        '  <td>' + trade.tokenSymbol + '</td>' +
+                        '  <td>$' + trade.buyPrice.toFixed(8) + '</td>' +
+                        '  <td>$' + trade.sellPrice.toFixed(8) + '</td>' +
+                        '  <td class="' + (trade.profitLossPercent >= 0 ? 'profit' : 'loss') + '">' +
+                        '    ' + trade.profitLossPercent.toFixed(2) + '%' +
+                        '  </td>' +
+                        '  <td>' + new Date(trade.sellTimestamp).toLocaleString() + '</td>' +
+                        '</tr>';
+                    });
+                  }
+                  
+                  historyHtml += '</table>';
+                  document.getElementById('trade-history').innerHTML = historyHtml;
+                  
+                } catch (error) {
+                  console.error('Error fetching data:', error);
+                }
+              }
+              
+              // Sell token function
+              async function sellToken(tokenAddress) {
+                if (confirm('Are you sure you want to sell this token?')) {
+                  try {
+                    const apiKey = prompt('Enter API key:');
+                    if (!apiKey) return;
+                    
+                    const response = await fetch('/api/control/sell', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        tokenAddress,
+                        apiKey,
+                      }),
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                      alert('Token sold successfully!');
+                      fetchData(); // Refresh data
+                    } else {
+                      alert('Error selling token: ' + result.error);
+                    }
+                  } catch (error) {
+                    alert('Error selling token: ' + error.message);
+                  }
+                }
+              }
+              
+              // Initial fetch
+              fetchData();
+              
+              // Refresh every 30 seconds
+              setInterval(fetchData, 30000);
+            </script>
+          </body>
+        </html>
+      `);
+    });
+  }
+
+  shutdown() {
+    if (this.server) {
+      this.server.close();
+      logger.info('Dashboard server shut down');
+    }
+  }
+}
+
+module.exports = new Dashboard();

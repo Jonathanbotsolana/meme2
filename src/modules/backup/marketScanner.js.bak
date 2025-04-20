@@ -1,0 +1,627 @@
+const axios = require('axios');
+const config = require('../../config/config');
+const logger = require('../utils/logger');
+const database = require('../utils/database');
+
+// Enhanced rate limiting helper with adaptive throttling
+const rateLimitedAxios = {
+  queue: [],
+  processing: false,
+  lastRequestTime: 0,
+  minRequestInterval: config.dexscreener.apiSettings?.minRequestInterval || 500, // Default 500ms between requests
+  maxConcurrentRequests: config.dexscreener.apiSettings?.maxConcurrentRequests || 3,
+  activeRequests: 0,
+  requestHistory: [], // Track recent requests for adaptive throttling
+  responseTimeHistory: [], // Track response times for adaptive throttling
+  cache: new Map(), // Simple cache for responses
+  cacheExpiration: config.dexscreener.apiSettings?.cacheExpirationMs || 30000, // 30 seconds default
+  
+  async request(config) {
+    // Check cache first if caching is enabled
+    if (config.dexscreener?.apiSettings?.cacheResponses !== false) {
+      const cacheKey = `${config.method || 'get'}-${config.url}-${JSON.stringify(config.params || {})}`;
+      const cachedResponse = this.cache.get(cacheKey);
+      
+      if (cachedResponse && Date.now() - cachedResponse.timestamp < this.cacheExpiration) {
+        logger.debug(`Cache hit for ${config.url}`);
+        return Promise.resolve(cachedResponse.data);
+      }
+    }
+    
+    return new Promise((resolve, reject) => {
+      this.queue.push({ config, resolve, reject });
+      this.processQueue();
+    });
+  },
+  
+  updateAdaptiveThrottling() {
+    // Keep only the last 20 response times
+    if (this.responseTimeHistory.length > 20) {
+      this.responseTimeHistory = this.responseTimeHistory.slice(-20);
+    }
+    
+    // Keep only the last 50 requests for time-based throttling
+    if (this.requestHistory.length > 50) {
+      this.requestHistory = this.requestHistory.slice(-50);
+    }
+    
+    // Calculate average response time
+    if (this.responseTimeHistory.length > 0) {
+      const avgResponseTime = this.responseTimeHistory.reduce((sum, time) => sum + time, 0) / this.responseTimeHistory.length;
+      
+      // Adjust request interval based on response time
+      if (avgResponseTime > 1000) {
+        // Slow down if responses are taking too long
+        this.minRequestInterval = Math.min(2000, this.minRequestInterval * 1.2);
+        logger.debug(`Increasing request interval to ${this.minRequestInterval}ms due to slow responses`);
+      } else if (avgResponseTime < 300 && this.minRequestInterval > 300) {
+        // Speed up if responses are fast
+        this.minRequestInterval = Math.max(300, this.minRequestInterval * 0.8);
+        logger.debug(`Decreasing request interval to ${this.minRequestInterval}ms due to fast responses`);
+      }
+    }
+    
+    // Check for rate limiting based on recent request density
+    const now = Date.now();
+    const recentRequests = this.requestHistory.filter(time => now - time < 10000).length;
+    
+    // If we've made more than 20 requests in the last 10 seconds, slow down
+    if (recentRequests > 20) {
+      this.minRequestInterval = Math.min(2000, this.minRequestInterval * 1.5);
+      logger.debug(`Increasing request interval to ${this.minRequestInterval}ms due to high request volume`);
+    }
+  },
+  
+  async processQueue() {
+    if (this.processing || this.queue.length === 0 || this.activeRequests >= this.maxConcurrentRequests) return;
+    
+    this.processing = true;
+    
+    // Update adaptive throttling
+    this.updateAdaptiveThrottling();
+    
+    const { config, resolve, reject } = this.queue.shift();
+    const now = Date.now();
+    const timeToWait = Math.max(0, this.lastRequestTime + this.minRequestInterval - now);
+    
+    if (timeToWait > 0) {
+      await new Promise(r => setTimeout(r, timeToWait));
+    }
+    
+    this.activeRequests++;
+    this.requestHistory.push(Date.now());
+    const requestStartTime = Date.now();
+    
+    try {
+      const response = await axios(config);
+      this.lastRequestTime = Date.now();
+      
+      // Record response time for adaptive throttling
+      const responseTime = Date.now() - requestStartTime;
+      this.responseTimeHistory.push(responseTime);
+      
+      // Cache the response if caching is enabled
+      if (config.dexscreener?.apiSettings?.cacheResponses !== false) {
+        const cacheKey = `${config.method || 'get'}-${config.url}-${JSON.stringify(config.params || {})}`;
+        this.cache.set(cacheKey, {
+          data: response,
+          timestamp: Date.now()
+        });
+      }
+      
+      resolve(response);
+    } catch (error) {
+      // Handle rate limiting with exponential backoff
+      if (error.response && (error.response.status === 429 || error.response.status === 503)) {
+        let retries = 0;
+        const maxRetries = config.dexscreener?.apiSettings?.maxRetries || 5;
+        let delay = config.dexscreener?.apiSettings?.retryDelayMs || 1000;
+        
+        while (retries < maxRetries) {
+          retries++;
+          logger.warn(`Server responded with ${error.response.status} status. Retrying after ${delay}ms delay...`);
+          await new Promise(r => setTimeout(r, delay));
+          
+          try {
+            const response = await axios(config);
+            this.lastRequestTime = Date.now();
+            
+            // Record response time for adaptive throttling
+            const responseTime = Date.now() - requestStartTime;
+            this.responseTimeHistory.push(responseTime);
+            
+            // Cache the response if caching is enabled
+            if (config.dexscreener?.apiSettings?.cacheResponses !== false) {
+              const cacheKey = `${config.method || 'get'}-${config.url}-${JSON.stringify(config.params || {})}`;
+              this.cache.set(cacheKey, {
+                data: response,
+                timestamp: Date.now()
+              });
+            }
+            
+            resolve(response);
+            break;
+          } catch (retryError) {
+            if ((retryError.response && (retryError.response.status === 429 || retryError.response.status === 503)) && retries < maxRetries) {
+              delay *= 2; // Exponential backoff
+              continue;
+            }
+            if (retries === maxRetries) {
+              reject(retryError);
+            }
+          }
+        }
+      } else {
+        reject(error);
+      }
+    } finally {
+      this.activeRequests--;
+      this.processing = false;
+      this.processQueue();
+    }
+  },
+  
+  get(url, config = {}) {
+    return this.request({ ...config, method: 'get', url });
+  }
+};
+
+class MarketScanner {
+  constructor() {
+    this.baseUrl = config.dexscreener.baseUrl;
+    this.pairsEndpoint = config.dexscreener.pairsEndpoint;
+    this.searchEndpoint = config.dexscreener.searchEndpoint;
+    
+    // Load configuration from the updated config file
+    this.minLiquidityUsd = config.dexscreener.pairFilters?.minLiquidityUsd || 100;
+    this.minVolumeUsd = config.dexscreener.pairFilters?.minVolumeUsd || 200;
+    this.maxPairAgeHours = config.dexscreener.pairFilters?.maxPairAgeHours || 12;
+    this.minPriceChangePercentage = config.dexscreener.pairFilters?.minPriceChangePercentage || 8;
+    this.prioritizeNewPairs = config.dexscreener.pairFilters?.prioritizeNewPairs || true;
+    this.maxMarketCapUsd = config.dexscreener.pairFilters?.maxMarketCapUsd || 3000000;
+    this.minPriceIncrease1h = config.dexscreener.pairFilters?.minPriceIncrease1h || 3;
+    this.minVolumeIncrease1h = config.dexscreener.pairFilters?.minVolumeIncrease1h || 15;
+    
+    // Meme token identifiers from config
+    this.memeTokenIdentifiers = config.dexscreener.pairFilters?.memeTokenIdentifiers || [];
+    
+    // Excluded tokens from config
+    this.excludeTokens = config.dexscreener.pairFilters?.excludeTokens || [];
+    
+    // Base tokens from config
+    this.baseTokens = config.dexscreener.pairFilters?.baseTokens || ['SOL', 'USDC', 'USDT'];
+    
+    // Advanced filtering options
+    this.usePatternRecognition = config.dexscreener.pairFilters?.advancedFiltering?.usePatternRecognition || false;
+    this.analyzeCreationPatterns = config.dexscreener.pairFilters?.advancedFiltering?.analyzeCreationPatterns || false;
+    this.detectNameTrends = config.dexscreener.pairFilters?.advancedFiltering?.detectNameTrends || false;
+    this.analyzeSymbolPatterns = config.dexscreener.pairFilters?.advancedFiltering?.analyzeSymbolPatterns || false;
+    this.correlateWithSocialTrends = config.dexscreener.pairFilters?.advancedFiltering?.correlateWithSocialTrends || false;
+    this.useMachineLearning = config.dexscreener.pairFilters?.advancedFiltering?.useMachineLearning || false;
+    this.analyzeTokenContract = config.dexscreener.pairFilters?.advancedFiltering?.analyzeTokenContract || false;
+    this.detectScamPatterns = config.dexscreener.pairFilters?.advancedFiltering?.detectScamPatterns || false;
+    
+    // Scanner state
+    this.lastScanTimestamp = 0;
+    this.knownPairs = new Set();
+    this.knownTokenPairs = new Set(); // Track token symbol pairs to avoid duplicates
+    this.knownTokenAddresses = new Set(); // Track token addresses
+    
+    // Load token detection filtering settings from config
+    this.tokenFilteringEnabled = config.scanner.tokenDetectionFiltering?.enabled || true;
+    this.commonTokens = config.scanner.tokenDetectionFiltering?.commonTokens || 
+      ['MEME', 'BONK', 'WIF', '$WIF', 'AI', 'SOL', 'SOLANA', 'DOGWIFHAT'];
+    this.maxPairsPerTokenSymbol = config.scanner.tokenDetectionFiltering?.maxPairsPerTokenSymbol || 3;
+    this.minLiquidityDifferenceUsd = config.scanner.tokenDetectionFiltering?.minLiquidityDifferenceUsd || 5000;
+    this.prioritizeHigherLiquidity = config.scanner.tokenDetectionFiltering?.prioritizeHigherLiquidity || true;
+    this.maxTrackingSetSize = config.scanner.tokenDetectionFiltering?.maxTrackingSetSize || 5000;
+    
+    // Track token pairs by symbol for better filtering
+    this.tokenPairsBySymbol = {};
+    
+    // Initialize social trend tracking
+    this.socialTrendTracker = {
+      trendingTokens: new Map(), // Map of token symbols to trend scores
+      lastUpdate: 0,
+      updateInterval: 300000, // 5 minutes
+    };
+    
+    // Initialize pattern recognition for token names
+    this.namePatterns = {
+      prefixes: new Set(['BABY', 'MINI', 'SUPER', 'MEGA', 'GIGA', 'TURBO', 'HYPER']),
+      suffixes: new Set(['INU', 'DOGE', 'CAT', 'MOON', 'ROCKET', 'ELON', 'PEPE', 'WOJAK', 'CHAD']),
+      trendingPatterns: new Map(), // Will be updated dynamically
+      lastUpdate: 0,
+      updateInterval: 3600000, // 1 hour
+    };
+  }
+
+  async fetchSolanaPairs() {
+    try {
+      // Try multiple search strategies based on our meme token identifiers
+      const searchQueries = [
+        'solana', 'sol', 'meme', 'ai', 'bonk', 'dogwifhat', 'wif',
+        ...this.memeTokenIdentifiers.slice(0, 10) // Use some of our meme token identifiers as search queries
+      ];
+      
+      // Deduplicate search queries
+      const uniqueQueries = [...new Set(searchQueries)];
+      let allPairs = [];
+      
+      // Use parallel requests if enabled
+      if (config.dexscreener.apiSettings?.useParallelRequests) {
+        const maxParallel = config.dexscreener.apiSettings?.maxParallelRequests || 3;
+        
+        // Process in batches to avoid overwhelming the API
+        for (let i = 0; i < uniqueQueries.length; i += maxParallel) {
+          const batch = uniqueQueries.slice(i, i + maxParallel);
+          const batchPromises = batch.map(query => this.fetchPairsForQuery(query));
+          
+          const batchResults = await Promise.all(batchPromises);
+          allPairs = [...allPairs, ...batchResults.flat()];
+          
+          // Small delay between batches
+          if (i + maxParallel < uniqueQueries.length) {
+            await new Promise(r => setTimeout(r, 500));
+          }
+        }
+      } else {
+        // Sequential requests
+        for (const query of uniqueQueries) {
+          const pairs = await this.fetchPairsForQuery(query);
+          allPairs = [...allPairs, ...pairs];
+        }
+      }
+      
+      // Remove duplicates by pair address
+      const uniquePairs = [];
+      const pairAddresses = new Set();
+      
+      // First pass: normalize token data and deduplicate by address
+      for (const pair of allPairs) {
+        if (!pairAddresses.has(pair.pairAddress)) {
+          // Normalize token symbols
+          if (pair.baseToken && pair.baseToken.symbol) {
+            pair.baseToken.symbol = pair.baseToken.symbol.trim().toUpperCase();
+          }
+          if (pair.quoteToken && pair.quoteToken.symbol) {
+            pair.quoteToken.symbol = pair.quoteToken.symbol.trim().toUpperCase();
+          }
+          
+          // Apply base token filtering
+          if (this.baseTokens.length > 0) {
+            const baseSymbol = pair.baseToken.symbol;
+            const quoteSymbol = pair.quoteToken.symbol;
+            
+            // Check if either the base or quote token is in our baseTokens list
+            if (!this.baseTokens.includes(baseSymbol) && !this.baseTokens.includes(quoteSymbol)) {
+              continue; // Skip this pair
+            }
+          }
+          
+          // Apply excluded token filtering
+          if (this.excludeTokens.length > 0) {
+            const baseSymbol = pair.baseToken.symbol;
+            const quoteSymbol = pair.quoteToken.symbol;
+            
+            // Skip if either token is in our exclude list
+            if (this.excludeTokens.includes(baseSymbol) || this.excludeTokens.includes(quoteSymbol)) {
+              continue; // Skip this pair
+            }
+          }
+          
+          pairAddresses.add(pair.pairAddress);
+          uniquePairs.push(pair);
+        }
+      }
+      
+      // Second pass: prioritize pairs with higher liquidity when symbols match
+      const symbolPairs = {};
+      for (const pair of uniquePairs) {
+        const baseSymbol = pair.baseToken.symbol;
+        const quoteSymbol = pair.quoteToken.symbol;
+        const pairKey = `${baseSymbol}/${quoteSymbol}`;
+        
+        const liquidity = parseFloat(pair.liquidity?.usd || 0);
+        
+        if (!symbolPairs[pairKey] || liquidity > symbolPairs[pairKey].liquidity) {
+          symbolPairs[pairKey] = {
+            pair,
+            liquidity
+          };
+        }
+      }
+      
+      // Apply pattern recognition if enabled
+      let filteredPairs = uniquePairs;
+      if (this.usePatternRecognition) {
+        filteredPairs = this.applyPatternRecognition(filteredPairs);
+      }
+      
+      // Apply name trend detection if enabled
+      if (this.detectNameTrends) {
+        filteredPairs = this.applyNameTrendDetection(filteredPairs);
+      }
+      
+      // Apply scam pattern detection if enabled
+      if (this.detectScamPatterns) {
+        filteredPairs = this.applyScamPatternDetection(filteredPairs);
+      }
+      
+      logger.info(`Fetched ${filteredPairs.length} unique Solana pairs from Dexscreener after filtering`);
+      return filteredPairs;
+    } catch (error) {
+      logger.error(`Error fetching Solana pairs: ${error.message}`);
+      return [];
+    }
+  }
+  
+  async fetchPairsForQuery(query) {
+    try {
+      const searchUrl = `${this.baseUrl}${this.searchEndpoint}?q=${query}`;
+      logger.debug(`Using search endpoint: ${searchUrl}`);
+      
+      const searchResponse = await rateLimitedAxios.get(searchUrl);
+      if (searchResponse.data && searchResponse.data.pairs) {
+        const pairs = searchResponse.data.pairs.filter(pair => pair.chainId === 'solana');
+        logger.debug(`Found ${pairs.length} Solana pairs for query "${query}"`);
+        return pairs;
+      }
+      return [];
+    } catch (error) {
+      logger.warn(`Error fetching pairs for query "${query}": ${error.message}`);
+      return [];
+    }
+  }
+  
+  applyPatternRecognition(pairs) {
+    if (!this.usePatternRecognition) return pairs;
+    
+    // Update trending patterns if needed
+    this.updateNamePatterns();
+    
+    return pairs.map(pair => {
+      // Add a pattern score to each pair
+      const baseSymbol = pair.baseToken.symbol;
+      const baseName = pair.baseToken.name || '';
+      
+      let patternScore = 0;
+      
+      // Check for known prefixes
+      for (const prefix of this.namePatterns.prefixes) {
+        if (baseSymbol.startsWith(prefix) || baseName.toUpperCase().startsWith(prefix)) {
+          patternScore += 0.1;
+          break;
+        }
+      }
+      
+      // Check for known suffixes
+      for (const suffix of this.namePatterns.suffixes) {
+        if (baseSymbol.endsWith(suffix) || baseName.toUpperCase().endsWith(suffix)) {
+          patternScore += 0.1;
+          break;
+        }
+      }
+      
+      // Check for trending patterns
+      this.namePatterns.trendingPatterns.forEach((score, pattern) => {
+        if (baseSymbol.includes(pattern) || baseName.toUpperCase().includes(pattern)) {
+          patternScore += score;
+        }
+      });
+      
+      // Add the pattern score to the pair
+      pair.patternScore = patternScore;
+      return pair;
+    });
+  }
+  
+  updateNamePatterns() {
+    const now = Date.now();
+    if (now - this.namePatterns.lastUpdate < this.namePatterns.updateInterval) {
+      return; // Not time to update yet
+    }
+    
+    // Update trending patterns based on recent successful tokens
+    // This would ideally come from a database of successful tokens
+    // For now, we'll just use a static list that would be updated periodically
+    this.namePatterns.trendingPatterns.clear();
+    
+    // These would be dynamically updated based on recent successful tokens
+    const currentTrends = [
+      { pattern: 'PEPE', score: 0.2 },
+      { pattern: 'AI', score: 0.15 },
+      { pattern: 'TURBO', score: 0.15 },
+      { pattern: 'WOJAK', score: 0.1 },
+      { pattern: 'CHAD', score: 0.1 },
+      { pattern: 'SIGMA', score: 0.1 },
+      { pattern: 'DOGE', score: 0.1 },
+      { pattern: 'CAT', score: 0.1 },
+      { pattern: 'ELON', score: 0.1 },
+      { pattern: 'TRUMP', score: 0.1 },
+      { pattern: 'BIDEN', score: 0.1 },
+      { pattern: 'MEME', score: 0.1 },
+    ];
+    
+    for (const { pattern, score } of currentTrends) {
+      this.namePatterns.trendingPatterns.set(pattern, score);
+    }
+    
+    this.namePatterns.lastUpdate = now;
+  }
+  
+  applyNameTrendDetection(pairs) {
+    if (!this.detectNameTrends) return pairs;
+    
+    // This would ideally use NLP or other advanced techniques
+    // For now, we'll just use a simple keyword matching approach
+    return pairs.map(pair => {
+      const baseSymbol = pair.baseToken.symbol;
+      const baseName = pair.baseToken.name || '';
+      
+      let trendScore = 0;
+      
+      // Check for trending keywords in the token name or symbol
+      for (const keyword of this.memeTokenIdentifiers) {
+        if (baseSymbol.includes(keyword) || baseName.toUpperCase().includes(keyword.toUpperCase())) {
+          trendScore += 0.05;
+        }
+      }
+      
+      // Add the trend score to the pair
+      pair.trendScore = (pair.trendScore || 0) + trendScore;
+      return pair;
+    });
+  }
+  
+  applyScamPatternDetection(pairs) {
+    if (!this.detectScamPatterns) return pairs;
+    
+    // This would ideally use more sophisticated techniques
+    // For now, we'll just use some simple heuristics
+    return pairs.filter(pair => {
+      const baseSymbol = pair.baseToken.symbol;
+      const baseName = pair.baseToken.name || '';
+      
+      // Filter out pairs with suspicious patterns
+      const suspiciousPatterns = [
+        'SCAM', 'RUG', 'HONEYPOT', 'HONEY', 'POT', 'FAKE',
+        'STEAL', 'THEFT', 'PONZI', 'PYRAMID', 'SCHEME'
+      ];
+      
+      for (const pattern of suspiciousPatterns) {
+        if (baseSymbol.includes(pattern) || baseName.toUpperCase().includes(pattern)) {
+          return false; // Skip this pair
+        }
+      }
+      
+      return true;
+    });
+  }
+  
+  // Main scanning function
+  async scan() {
+    try {
+      const startTime = Date.now();
+      logger.info('Starting market scan for new pairs');
+      
+      // Fetch pairs from DexScreener
+      const pairs = await this.fetchSolanaPairs();
+      
+      // Filter pairs based on our criteria
+      const filteredPairs = this.filterPairs(pairs);
+      
+      // Update last scan timestamp
+      this.lastScanTimestamp = Date.now();
+      
+      const scanDuration = (Date.now() - startTime) / 1000;
+      logger.info(`Market scan completed in ${scanDuration.toFixed(2)}s, found ${filteredPairs.length} pairs matching criteria`);
+      
+      return filteredPairs;
+    } catch (error) {
+      logger.error(`Error during market scan: ${error.message}`);
+      return [];
+    }
+  }
+  
+  // Filter pairs based on our criteria
+  filterPairs(pairs) {
+    if (!pairs || pairs.length === 0) return [];
+    
+    // Start with all pairs
+    let filteredPairs = [...pairs];
+    
+    // Filter by liquidity
+    if (this.minLiquidityUsd > 0) {
+      filteredPairs = filteredPairs.filter(pair => {
+        const liquidity = parseFloat(pair.liquidity?.usd || 0);
+        return liquidity >= this.minLiquidityUsd;
+      });
+    }
+    
+    // Filter by volume
+    if (this.minVolumeUsd > 0) {
+      filteredPairs = filteredPairs.filter(pair => {
+        const volume = parseFloat(pair.volume?.h24 || 0);
+        return volume >= this.minVolumeUsd;
+      });
+    }
+    
+    // Filter by pair age
+    if (this.maxPairAgeHours > 0) {
+      const now = Date.now();
+      filteredPairs = filteredPairs.filter(pair => {
+        if (!pair.pairCreatedAt) return true; // If we don't have creation time, include it
+        
+        const pairCreatedAt = new Date(pair.pairCreatedAt).getTime();
+        const ageHours = (now - pairCreatedAt) / (1000 * 60 * 60);
+        return ageHours <= this.maxPairAgeHours;
+      });
+    }
+    
+    // Filter by price change
+    if (this.minPriceChangePercentage > 0) {
+      filteredPairs = filteredPairs.filter(pair => {
+        const priceChange = parseFloat(pair.priceChange?.h24 || 0);
+        return priceChange >= this.minPriceChangePercentage;
+      });
+    }
+    
+    // Filter by 1h price increase
+    if (this.minPriceIncrease1h > 0) {
+      filteredPairs = filteredPairs.filter(pair => {
+        const priceChange1h = parseFloat(pair.priceChange?.h1 || 0);
+        return priceChange1h >= this.minPriceIncrease1h;
+      });
+    }
+    
+    // Filter by 1h volume increase (if available)
+    if (this.minVolumeIncrease1h > 0) {
+      filteredPairs = filteredPairs.filter(pair => {
+        // This is a bit tricky as DexScreener doesn't directly provide 1h volume change
+        // We'd need to compare with previous scans or use a different metric
+        // For now, we'll just use a placeholder check
+        return true;
+      });
+    }
+    
+    // Filter by market cap
+    if (this.maxMarketCapUsd > 0) {
+      filteredPairs = filteredPairs.filter(pair => {
+        const marketCap = parseFloat(pair.fdv || 0);
+        return marketCap <= this.maxMarketCapUsd && marketCap > 0;
+      });
+    }
+    
+    // Filter out already known pairs
+    filteredPairs = filteredPairs.filter(pair => {
+      return !this.knownPairs.has(pair.pairAddress);
+    });
+    
+    // Add new pairs to known pairs set
+    filteredPairs.forEach(pair => {
+      this.knownPairs.add(pair.pairAddress);
+      
+      // Also track by token address
+      if (pair.baseToken?.address) {
+        this.knownTokenAddresses.add(pair.baseToken.address);
+      }
+      if (pair.quoteToken?.address) {
+        this.knownTokenAddresses.add(pair.quoteToken.address);
+      }
+    });
+    
+    // Sort by creation time (newest first) if prioritizing new pairs
+    if (this.prioritizeNewPairs) {
+      filteredPairs.sort((a, b) => {
+        const timeA = a.pairCreatedAt ? new Date(a.pairCreatedAt).getTime() : 0;
+        const timeB = b.pairCreatedAt ? new Date(b.pairCreatedAt).getTime() : 0;
+        return timeB - timeA;
+      });
+    }
+    
+    return filteredPairs;
+  }
+}
+
+module.exports = MarketScanner;
